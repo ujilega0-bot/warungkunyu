@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarungKu Toko Online Terlengkap</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <div class="logo-icon"><i class="fas fa-store"></i></div>
+        <div class="logo-text">
+          <span class="logo-main">WarungKu</span>
+          <span class="logo-sub">Toko Online</span>
+        </div>
+      </div>
+
+      <div class="nav-search">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Cari produk favoritmu..." />
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div class="nav-cart" id="cartBtn">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </div>
+        <div class="nav-user">
+          <i class="fas fa-user-circle"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Menu -->
+    <div class="nav-categories">
+      <div class="cat-container">
+        <button class="cat-btn active" data-cat="semua">Semua</button>
+        <button class="cat-btn" data-cat="minuman">Minuman</button>
+        <button class="cat-btn" data-cat="makanan">Makanan</button>
+        <button class="cat-btn" data-cat="cemilan">Cemilan</button>
+        <a href="#aboutSection" class="cat-btn">Tentang Kami</a>
+        <a href="#contactSection" class="cat-btn">Kontak Kami</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO BANNER ===== -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fas fa-bolt"></i> Flash Sale Hari Ini!</div>
+      <h1>Belanja Enak,<br /><span>Harga Hemat</span></h1>
+      <p>Dapatkan diskon hingga 50% untuk produk pilihan setiap hari</p>
+      <button class="hero-btn" onclick="scrollToProducts()">
+        <i class="fas fa-shopping-bag"></i> Belanja Sekarang
+      </button>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-card fc1"><i class="fas fa-star"></i> 4.9 Rating</div>
+      <div class="floating-card fc2"><i class="fas fa-truck"></i> Gratis Ongkir</div>
+      <div class="floating-card fc3"><i class="fas fa-tag"></i> Diskon 50%</div>
+      <div class="hero-emoji">🛒</div>
+    </div>
+  </section>
+
+  <!-- ===== PROMO BANNER ===== -->
+  <div class="promo-ticker">
+    <div class="ticker-inner">
+      <span>🔥 FLASH SALE</span>
+      <span>⚡ Diskon s/d 50%</span>
+      <span>🚚 Gratis Ongkir</span>
+      <span>🎁 Bonus Setiap Pembelian</span>
+      <span>⭐ Kualitas Terjamin</span>
+      <span>🔥 FLASH SALE</span>
+      <span>⚡ Diskon s/d 50%</span>
+      <span>🚚 Gratis Ongkir</span>
+      <span>🎁 Bonus Setiap Pembelian</span>
+      <span>⭐ Kualitas Terjamin</span>
+    </div>
+  </div>
+
+  <!-- ===== PRODUCTS ===== -->
+  <main class="products-section" id="productsSection">
+    <div class="section-header">
+      <h2 id="sectionTitle">Semua Produk</h2>
+      <p id="sectionSubtitle">Pilihan terbaik untuk kamu</p>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      <!-- Products injected by JS -->
+    </div>
+  </main>
+
+  <!-- ===== ABOUT US ===== -->
+  <section class="about-section" id="aboutSection">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-text">
+          <h2>Kenapa Memilih WarungKu?</h2>
+          <p>WarungKu adalah destinasi belanja online terpercaya yang menghadirkan pengalaman berbelanja yang mudah, cepat, dan menyenangkan. Kami berkomitmen untuk memberikan produk berkualitas dengan harga terbaik.</p>
+          <div class="about-features">
+            <div class="feature">
+              <i class="fas fa-shipping-fast"></i>
+              <h4>Pengiriman Cepat</h4>
+              <p>Pesanan Anda akan sampai dalam 30-60 menit di area Jakarta</p>
+            </div>
+            <div class="feature">
+              <i class="fas fa-shield-alt"></i>
+              <h4>Produk Berkualitas</h4>
+              <p>Kami hanya menjual produk fresh dan berkualitas tinggi</p>
+            </div>
+            <div class="feature">
+              <i class="fas fa-headset"></i>
+              <h4>Layanan 24/7</h4>
+              <p>Tim customer service kami siap membantu kapan saja</p>
+            </div>
+          </div>
+        </div>
+        <div class="about-image">
+          <img src="gambar/OIP.jpg" alt="WarungKu Store" onerror="this.style.display='none'">
+          <div class="about-emoji">🏪</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Apa Kata Pelanggan Kami?</h2>
+        <p>Ribuan pelanggan puas dengan layanan WarungKu</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-rating">⭐⭐⭐⭐⭐</div>
+          <p>"Pesanan selalu sampai tepat waktu, produk fresh dan harganya sangat terjangkau. Recommended banget!"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">👩‍💼</div>
+            <div>
+              <div class="author-name">Sari Indah</div>
+              <div class="author-title">Ibu Rumah Tangga</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-rating">⭐⭐⭐⭐⭐</div>
+          <p>"Aplikasi mudah digunakan, pembayaran QRIS cepat dan aman. Sudah jadi langganan sejak 2 tahun lalu."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">👨‍💻</div>
+            <div>
+              <div class="author-name">Ahmad Rahman</div>
+              <div class="author-title">Karyawan Swasta</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-rating">⭐⭐⭐⭐⭐</div>
+          <p>"COD sangat membantu, bayar pas barang diterima. Kurir ramah dan profesional. Terima kasih WarungKu!"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">👩‍🎓</div>
+            <div>
+              <div class="author-name">Maya Sari</div>
+              <div class="author-title">Mahasiswa</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3><i class="fas fa-shopping-cart"></i> Keranjang Belanja</h3>
+      <button class="cart-close" id="cartClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty" id="cartEmpty">
+        <div class="empty-icon">🛒</div>
+        <p>Keranjangmu masih kosong</p>
+        <small>Yuk, tambahkan produk favoritmu!</small>
+      </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="subtotalAmt">Rp 0</span>
+        </div>
+        <div class="summary-row discount-row">
+          <span>Diskon</span>
+          <span id="discountAmt" class="discount-val">- Rp 0</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>Total</span>
+          <span id="totalAmt">Rp 0</span>
+        </div>
+      </div>
+      <button class="checkout-btn" id="checkoutBtn">
+        <i class="fas fa-credit-card"></i> Lanjut Checkout
+      </button>
+      <button class="clear-cart-btn" id="clearCartBtn">
+        <i class="fas fa-trash"></i> Kosongkan Keranjang
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== ADD TO CART ANIMATION ===== -->
+  <div class="fly-item" id="flyItem">🛒</div>
+
+  <!-- ===== CHECKOUT MODAL ===== -->
+  <div class="modal-overlay" id="checkoutOverlay">
+    <div class="modal checkout-modal" id="checkoutModal">
+      <div class="modal-header">
+        <h3><i class="fas fa-receipt"></i> Checkout</h3>
+        <button class="modal-close" id="checkoutClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Step 1: Form -->
+        <div class="checkout-step" id="step1">
+          <h4>📋 Data Pemesan</h4>
+          <div class="form-group">
+            <label><i class="fas fa-user"></i> Nama Lengkap</label>
+            <input type="text" id="custName" placeholder="Masukkan nama lengkap..." />
+          </div>
+          <div class="form-group">
+            <label><i class="fab fa-whatsapp"></i> Nomor WhatsApp</label>
+            <input type="text" id="custPhone" placeholder="Contoh: 08123456789" />
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-map-marker-alt"></i> Alamat Pengiriman</label>
+            <textarea id="custAddress" placeholder="Masukkan alamat lengkap..." rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-sticky-note"></i> Catatan (opsional)</label>
+            <textarea id="custNote" placeholder="Misal: tidak pedas, tanpa gula..." rows="2"></textarea>
+          </div>
+          <button class="step-btn" id="toStep2Btn">Pilih Pembayaran <i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <!-- Step 2: Payment -->
+        <div class="checkout-step hidden" id="step2">
+          <h4>💳 Metode Pembayaran</h4>
+          <div class="payment-method active" id="payQris">
+            <div class="pay-icon">📱</div>
+            <div class="pay-info">
+              <strong>QRIS</strong>
+              <small>Scan QR Code untuk bayar</small>
+            </div>
+            <div class="pay-check"><i class="fas fa-check-circle"></i></div>
+          </div>
+          <div class="payment-method" id="payCod">
+            <div class="pay-icon">💵</div>
+            <div class="pay-info">
+              <strong>Cash on Delivery (COD)</strong>
+              <small>Bayar saat barang diterima</small>
+            </div>
+            <div class="pay-check"><i class="fas fa-check-circle"></i></div>
+          </div>
+          
+          <div class="qris-box" id="qrisBox">
+            <div class="qris-header">Scan QRIS untuk Membayar</div>
+            <div class="qris-total" id="qrisTotal">Rp 0</div>
+            <!-- QRIS QR Code Visual -->
+            <div class="qris-image-wrap">
+              <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="200" fill="white"/>
+                <!-- Corner squares -->
+                <rect x="10" y="10" width="60" height="60" fill="none" stroke="#1a1a2e" stroke-width="8"/>
+                <rect x="20" y="20" width="40" height="40" fill="#1a1a2e"/>
+                <rect x="130" y="10" width="60" height="60" fill="none" stroke="#1a1a2e" stroke-width="8"/>
+                <rect x="140" y="20" width="40" height="40" fill="#1a1a2e"/>
+                <rect x="10" y="130" width="60" height="60" fill="none" stroke="#1a1a2e" stroke-width="8"/>
+                <rect x="20" y="140" width="40" height="40" fill="#1a1a2e"/>
+                <!-- Data pattern -->
+                <rect x="80" y="10" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="100" y="10" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="30" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="110" y="20" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="90" y="40" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="120" y="30" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="50" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="100" y="50" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="10" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="30" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="50" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="10" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="40" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="60" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="10" y="110" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="30" y="110" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="50" y="110" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="20" y="90" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="100" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="120" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="90" y="90" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="110" y="90" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="100" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="120" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="130" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="150" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="170" y="80" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="140" y="90" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="160" y="90" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="130" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="150" y="100" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="130" y="110" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="160" y="110" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="120" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="100" y="120" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="110" y="130" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="140" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="90" y="150" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="120" y="140" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="80" y="160" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="100" y="160" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="120" y="160" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="130" y="130" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="150" y="130" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="170" y="130" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="140" y="140" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="160" y="140" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="130" y="150" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="150" y="150" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="170" y="150" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="140" y="160" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="130" y="170" width="10" height="10" fill="#1a1a2e"/>
+                <rect x="160" y="170" width="10" height="10" fill="#1a1a2e"/>
+                <!-- Center logo -->
+                <rect x="88" y="88" width="24" height="24" rx="4" fill="#f97316"/>
+                <text x="100" y="104" font-size="12" text-anchor="middle" fill="white" font-weight="bold">W</text>
+              </svg>
+            </div>
+            <div class="qris-note">
+              <i class="fas fa-info-circle"></i>
+              Bayar dengan GoPay, OVO, Dana, ShopeePay, atau M-Banking
+            </div>
+            <div class="qris-timer">
+              <i class="fas fa-clock"></i> Batas waktu: <span id="qrisCountdown">10:00</span>
+            </div>
+          </div>
+
+          <div class="cod-box hidden" id="codBox">
+            <div class="cod-header">Pembayaran Cash on Delivery (COD)</div>
+            <div class="cod-total" id="codTotal">Rp 0</div>
+            <div class="cod-info">
+              <div class="cod-note">
+                <i class="fas fa-info-circle"></i>
+                <strong>Pembayaran dilakukan kepada kurir saat barang diterima.</strong><br>
+                Pastikan Anda memiliki uang tunai sesuai nominal pesanan. Kurir akan memberikan struk pembayaran sebagai bukti.
+              </div>
+              <div class="cod-benefits">
+                <h5>Keuntungan COD:</h5>
+                <ul>
+                  <li>✅ Aman dan nyaman, bayar setelah terima barang</li>
+                  <li>💰 Tidak perlu transfer atau bayar online</li>
+                  <li>🚚 Kurir terpercaya langsung dari WarungKu</li>
+                  <li>🔒 Garansi keamanan dan kepuasan</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-nav">
+            <button class="step-btn back-btn" id="backToStep1"><i class="fas fa-arrow-left"></i> Kembali</button>
+            <button class="step-btn confirm-btn" id="confirmPayBtn"><i class="fas fa-check"></i> Konfirmasi Bayar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RECEIPT MODAL ===== -->
+  <div class="modal-overlay" id="receiptOverlay">
+    <div class="modal receipt-modal" id="receiptModal">
+      <div class="receipt-paper" id="receiptPaper">
+        <div class="receipt-top">
+          <div class="receipt-logo">
+            <span class="r-logo-icon">🛒</span>
+            <div>
+              <div class="r-logo-name">WarungKu</div>
+              <div class="r-logo-sub">Toko Online Terlengkap</div>
+            </div>
+          </div>
+          <div class="receipt-divider dashed"></div>
+          <div class="receipt-title">NOTA PEMBELIAN</div>
+          <div class="receipt-meta">
+            <div class="meta-row"><span>No. Order</span><span id="rOrderNo">#WK-0001</span></div>
+            <div class="meta-row"><span>Tanggal</span><span id="rDate">-</span></div>
+            <div class="meta-row"><span>Waktu</span><span id="rTime">-</span></div>
+            <div class="meta-row"><span>Pelanggan</span><span id="rName">-</span></div>
+            <div class="meta-row"><span>WhatsApp</span><span id="rPhone">-</span></div>
+            <div class="meta-row"><span>Alamat</span><span id="rAddress">-</span></div>
+          </div>
+          <div class="receipt-divider dashed"></div>
+          <div class="receipt-items-title">DETAIL PESANAN</div>
+          <div id="rItems" class="receipt-items"></div>
+          <div class="receipt-divider dashed"></div>
+          <div class="receipt-totals">
+            <div class="r-total-row"><span>Subtotal</span><span id="rSubtotal">-</span></div>
+            <div class="r-total-row discount"><span>Diskon</span><span id="rDiscount">-</span></div>
+            <div class="r-total-row grand"><span>TOTAL</span><span id="rTotal">-</span></div>
+          </div>
+          <div class="receipt-divider dashed"></div>
+          <div class="receipt-payment">
+            <div class="r-pay-row"><span>Metode Bayar</span><span id="rPaymentMethod">QRIS</span></div>
+            <div class="r-pay-row"><span>Status</span><span id="rPaymentStatus" class="paid-badge">✅ LUNAS</span></div>
+          </div>
+          <div class="receipt-divider dashed"></div>
+          <div id="rNote" class="receipt-note-section"></div>
+          <div class="receipt-footer">
+            <div class="rf-thanks">Terima kasih telah berbelanja!</div>
+            <div class="rf-sub">Pesanan akan segera diproses 😊</div>
+            <div class="rf-contact">
+              <i class="fab fa-whatsapp"></i> wa.me/6288294519516
+            </div>
+            <div class="receipt-barcode">
+              <div class="barcode-lines">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="barcode-num" id="rBarcodeNum">WK20260001</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="receipt-actions">
+        <button class="ra-btn wa-btn" id="sendWaBtn">
+          <i class="fab fa-whatsapp"></i> Kirim ke WhatsApp
+        </button>
+        <button class="ra-btn close-btn" id="receiptClose">
+          <i class="fas fa-times"></i> Selesai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTACT ===== -->
+  <section class="contact-section" id="contactSection">
+    <div class="container">
+      <div class="contact-content">
+        <div class="contact-text">
+          <h2>Hubungi Kami</h2>
+          <p>Butuh bantuan? Tim customer service kami siap membantu 24/7</p>
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fab fa-whatsapp"></i>
+              <div>
+                <strong>WhatsApp</strong>
+                <span>+62 882-9451-9516</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-clock"></i>
+              <div>
+                <strong>Jam Operasional</strong>
+                <span>08.00 - 22.00 WIB</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <strong>Alamat</strong>
+                <span>Jakarta, Indonesia</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="contact-form">
+          <h3>Kirim Pesan</h3>
+          <form id="contactForm">
+            <div class="form-group">
+              <input type="text" id="contactName" placeholder="Nama Anda" required>
+            </div>
+            <div class="form-group">
+              <input type="email" id="contactEmail" placeholder="Email Anda" required>
+            </div>
+            <div class="form-group">
+              <textarea id="contactMessage" placeholder="Pesan Anda..." rows="4" required></textarea>
+            </div>
+            <button type="submit" class="contact-btn">
+              <i class="fas fa-paper-plane"></i> Kirim Pesan
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BACK TO TOP ===== -->
+  <button class="back-to-top" id="backToTop">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="footer-logo">🛒 WarungKu</span>
+        <p>Belanja nyaman, harga bersahabat. Kepuasan pelanggan adalah prioritas kami.</p>
+      </div>
+      <div class="footer-info">
+        <div><i class="fab fa-whatsapp"></i> 628829-4519-516</div>
+        <div><i class="fas fa-clock"></i> Buka 08.00 – 22.00 WIB</div>
+        <div><i class="fas fa-map-marker-alt"></i> Jakarta, Indonesia</div>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 WarungKu. All rights reserved.</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
