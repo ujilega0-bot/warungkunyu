@@ -970,6 +970,8 @@ body {
   font-family: inherit; font-weight: 800; cursor: pointer;
 }
 .admin-refresh:hover { background: var(--primary-d); }
+.test-db-btn { background: var(--success); }
+.test-db-btn:hover { background: #059669; }
 
 .admin-alert {
   display: none;
