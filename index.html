@@ -34,7 +34,7 @@
           <i class="fas fa-shopping-cart"></i>
           <span class="cart-badge" id="cartBadge">0</span>
         </div>
-        <div class="nav-user">
+        <div class="nav-user" id="userBtn" title="Riwayat Pesanan" role="button" tabindex="0">
           <i class="fas fa-user-circle"></i>
         </div>
       </div>
@@ -200,6 +200,10 @@
         <div class="summary-row discount-row">
           <span>Diskon</span>
           <span id="discountAmt" class="discount-val">- Rp 0</span>
+        </div>
+        <div class="summary-row shipping-row">
+          <span>Ongkir</span>
+          <span id="shippingAmt">Gratis</span>
         </div>
         <div class="summary-row total-row">
           <span>Total</span>
@@ -407,6 +411,8 @@
             <div class="meta-row"><span>No. Order</span><span id="rOrderNo">#WK-0001</span></div>
             <div class="meta-row"><span>Tanggal</span><span id="rDate">-</span></div>
             <div class="meta-row"><span>Waktu</span><span id="rTime">-</span></div>
+            <div class="meta-row"><span>Toko</span><span>WarungKu Jakarta</span></div>
+            <div class="meta-row"><span>Kasir</span><span id="rCashier">Admin WarungKu</span></div>
             <div class="meta-row"><span>Pelanggan</span><span id="rName">-</span></div>
             <div class="meta-row"><span>WhatsApp</span><span id="rPhone">-</span></div>
             <div class="meta-row"><span>Alamat</span><span id="rAddress">-</span></div>
@@ -418,11 +424,13 @@
           <div class="receipt-totals">
             <div class="r-total-row"><span>Subtotal</span><span id="rSubtotal">-</span></div>
             <div class="r-total-row discount"><span>Diskon</span><span id="rDiscount">-</span></div>
+            <div class="r-total-row shipping"><span>Ongkir</span><span id="rShipping">Gratis</span></div>
             <div class="r-total-row grand"><span>TOTAL</span><span id="rTotal">-</span></div>
           </div>
           <div class="receipt-divider dashed"></div>
           <div class="receipt-payment">
             <div class="r-pay-row"><span>Metode Bayar</span><span id="rPaymentMethod">QRIS</span></div>
+            <div class="r-pay-row"><span>Status Pesanan</span><span id="rOrderStatus" class="order-badge">Diproses</span></div>
             <div class="r-pay-row"><span>Status</span><span id="rPaymentStatus" class="paid-badge">✅ LUNAS</span></div>
           </div>
           <div class="receipt-divider dashed"></div>
@@ -447,12 +455,28 @@
       </div>
 
       <div class="receipt-actions">
+        <button class="ra-btn print-btn" id="printReceiptBtn">
+          <i class="fas fa-print"></i> Cetak Struk
+        </button>
         <button class="ra-btn wa-btn" id="sendWaBtn">
           <i class="fab fa-whatsapp"></i> Kirim ke WhatsApp
         </button>
         <button class="ra-btn close-btn" id="receiptClose">
           <i class="fas fa-times"></i> Selesai
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ORDER HISTORY MODAL ===== -->
+  <div class="modal-overlay" id="historyOverlay">
+    <div class="modal history-modal" id="historyModal">
+      <div class="modal-header">
+        <h3><i class="fas fa-clock-rotate-left"></i> Riwayat Pesanan</h3>
+        <button class="modal-close" id="historyClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="history-list" id="historyList"></div>
       </div>
     </div>
   </div>
@@ -501,7 +525,7 @@
               <textarea id="contactMessage" placeholder="Pesan Anda..." rows="4" required></textarea>
             </div>
             <button type="submit" class="contact-btn">
-              <i class="fas fa-paper-plane"></i> Kirim Pesan
+              <i class="fab fa-whatsapp"></i> Kirim via WhatsApp
             </button>
           </form>
         </div>
@@ -528,11 +552,15 @@
         <div><i class="fab fa-whatsapp"></i> 628829-4519-516</div>
         <div><i class="fas fa-clock"></i> Buka 08.00 – 22.00 WIB</div>
         <div><i class="fas fa-map-marker-alt"></i> Jakarta, Indonesia</div>
+        <div><i class="fas fa-database"></i> <a href="admin.html">Admin Pesanan</a></div>
       </div>
     </div>
     <div class="footer-bottom">© 2026 WarungKu. All rights reserved.</div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
