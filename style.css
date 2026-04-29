@@ -588,6 +588,7 @@ body {
 .modal-body { padding: 24px; }
 
 .checkout-step h4 { font-size: 16px; font-weight: 800; margin-bottom: 20px; color: var(--text); }
+.hidden { display: none !important; }
 .checkout-step.hidden { display: none; }
 
 /* Form */
@@ -662,6 +663,15 @@ body {
 .cod-total { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 16px; }
 
 .cod-info { text-align: left; }
+.cod-courier-alert {
+  display: flex; align-items: center; gap: 12px;
+  background: #ecfdf5; border: 1px solid #10b981;
+  border-radius: 8px; padding: 12px; margin-bottom: 14px;
+  color: #065f46;
+}
+.cod-courier-alert i { font-size: 22px; }
+.cod-courier-alert span { display: block; font-size: 12px; font-weight: 700; }
+.cod-courier-alert strong { display: block; font-size: 20px; font-weight: 900; color: #047857; }
 .cod-note {
   background: #fef3c7; border: 1px solid #f59e0b;
   border-radius: 8px; padding: 12px; margin-bottom: 16px;
