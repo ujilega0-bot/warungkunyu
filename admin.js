@@ -31,6 +31,29 @@ function showAdminAlert(message, type = 'info') {
   alert.className = `admin-alert show ${type}`;
 }
 
+function getFirebaseErrorMessage(error) {
+  const message = error?.message || 'Terjadi kesalahan Firebase.';
+  const code = error?.code || '';
+
+  if (code.includes('permission-denied') || message.toLowerCase().includes('permission')) {
+    return 'Izin Firestore ditolak. Buka Firebase Console > Firestore Database > Rules, lalu izinkan read/write untuk collection orders.';
+  }
+
+  if (code.includes('unavailable') || message.toLowerCase().includes('network')) {
+    return 'Firebase tidak bisa diakses. Cek koneksi internet lalu refresh halaman admin.';
+  }
+
+  if (code.includes('failed-precondition') && message.toLowerCase().includes('index')) {
+    return 'Firestore meminta index. Klik link index yang muncul di console browser atau hapus orderBy.';
+  }
+
+  if (code.includes('not-found')) {
+    return 'Firestore Database belum dibuat. Buat Firestore Database dulu di Firebase Console.';
+  }
+
+  return message;
+}
+
 function initFirebaseAdmin() {
   if (!isFirebaseConfigured()) {
     showAdminAlert('Firebase belum terhubung. Cek firebase-config.js, script Firebase, dan upload semua file ke GitHub.', 'warning');
@@ -44,7 +67,7 @@ function initFirebaseAdmin() {
     db = firebase.firestore();
     return true;
   } catch (error) {
-    showAdminAlert(`Firebase init gagal: ${error.message}`, 'warning');
+    showAdminAlert(`Firebase init gagal: ${getFirebaseErrorMessage(error)}`, 'warning');
     return false;
   }
 }
@@ -106,15 +129,56 @@ async function loadOrders() {
   showAdminAlert('Mengambil data pesanan dari Firebase...', 'info');
 
   try {
-    const snapshot = await db.collection('orders').orderBy('createdAtMs', 'desc').get();
+    let snapshot;
+    try {
+      snapshot = await db.collection('orders').orderBy('createdAtMs', 'desc').get();
+    } catch {
+      snapshot = await db.collection('orders').get();
+    }
     const orders = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    orders.sort((a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
     renderOrders(orders);
     updateStats(orders);
     showAdminAlert('Data pesanan berhasil dimuat.', 'success');
   } catch (error) {
-    showAdminAlert(`Gagal memuat database: ${error.message}`, 'warning');
+    showAdminAlert(`Gagal memuat database: ${getFirebaseErrorMessage(error)}`, 'warning');
+  }
+}
+
+async function testDatabaseConnection() {
+  if (!db && !initFirebaseAdmin()) return;
+
+  showAdminAlert('Mengetes koneksi tulis ke Firebase...', 'info');
+
+  try {
+    const testId = `TEST-${Date.now()}`;
+    await db.collection('orders').doc(testId).set({
+      orderNo: testId,
+      name: 'Tes Database',
+      phone: '6280000000000',
+      address: 'Data tes dari halaman admin',
+      note: 'Boleh dihapus dari Firebase Console',
+      paymentMethod: 'TEST',
+      paymentStatus: 'TEST',
+      orderStatus: 'Tes Koneksi',
+      subtotal: 0,
+      discount: 0,
+      shipping: 0,
+      total: 0,
+      items: [],
+      dateStr: new Date().toLocaleDateString('id-ID'),
+      timeStr: new Date().toLocaleTimeString('id-ID'),
+      createdAtMs: Date.now(),
+      createdAt: new Date().toISOString()
+    });
+
+    showAdminAlert('Tes berhasil. Firebase sudah bisa menerima data pesanan.', 'success');
+    loadOrders();
+  } catch (error) {
+    showAdminAlert(`Tes gagal: ${getFirebaseErrorMessage(error)}`, 'warning');
   }
 }
 
 $('refreshOrdersBtn').addEventListener('click', loadOrders);
+$('testDatabaseBtn').addEventListener('click', testDatabaseConnection);
 document.addEventListener('DOMContentLoaded', loadOrders);
