@@ -223,6 +223,25 @@ function initFirestore() {
   }
 }
 
+function getFirebaseErrorMessage(error) {
+  const message = error?.message || 'Terjadi kesalahan Firebase.';
+  const code = error?.code || '';
+
+  if (code.includes('permission-denied') || message.toLowerCase().includes('permission')) {
+    return 'Izin Firestore ditolak. Cek Firestore Rules dan izinkan read/write untuk collection orders.';
+  }
+
+  if (code.includes('unavailable') || message.toLowerCase().includes('network')) {
+    return 'Firebase tidak bisa diakses. Cek koneksi internet lalu coba lagi.';
+  }
+
+  if (code.includes('not-found')) {
+    return 'Firestore Database belum dibuat. Buat Firestore Database dulu di Firebase Console.';
+  }
+
+  return message;
+}
+
 function normalizeCartItem(rawItem) {
   const product = products.find((item) => item.id === rawItem?.id);
   if (!product) return null;
@@ -305,7 +324,7 @@ async function saveOrderToDatabase(receiptData) {
   const db = initFirestore();
   if (!db) {
     showToast(window.lastFirebaseError || 'Firebase belum terhubung.', 5000);
-    return;
+    return false;
   }
 
   const orderPayload = buildOrderPayload(receiptData);
@@ -315,10 +334,12 @@ async function saveOrderToDatabase(receiptData) {
     await db.collection('orders').doc(docId).set(orderPayload);
     console.log('Firebase order saved:', docId);
     showToast('Pesanan tersimpan ke database Firebase.', 4000);
+    return true;
   } catch (error) {
-    window.lastFirebaseError = error.message;
+    window.lastFirebaseError = getFirebaseErrorMessage(error);
     console.error('Firestore save error:', error);
-    showToast(`Database gagal: ${error.message}`, 7000);
+    showToast(`Database gagal: ${window.lastFirebaseError}`, 8000);
+    return false;
   }
 }
 
@@ -733,7 +754,6 @@ function buildReceipt() {
   };
 
   saveOrderHistory(window._receiptData);
-  saveOrderToDatabase(window._receiptData);
 }
 
 function openReceipt() {
@@ -953,12 +973,21 @@ $('backToStep1').addEventListener('click', () => {
   resetQrisTimerDisplay();
 });
 
-$('confirmPayBtn').addEventListener('click', () => {
+$('confirmPayBtn').addEventListener('click', async () => {
+  const confirmBtn = $('confirmPayBtn');
+  if (confirmBtn.disabled) return;
+
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
   stopQrisTimer();
   updateOrderCount();
   closeCheckout();
   buildReceipt();
+  showToast('Menyimpan pesanan ke database...', 3000);
+  await saveOrderToDatabase(window._receiptData);
   openReceipt();
+  confirmBtn.disabled = false;
+  confirmBtn.innerHTML = '<i class="fas fa-check"></i> Konfirmasi Bayar';
 });
 
 $('receiptClose').addEventListener('click', closeReceipt);
