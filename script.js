@@ -1,4 +1,4 @@
- 'use strict';
+'use strict';
 
 const products = [
   {
@@ -192,20 +192,35 @@ function isFirebaseConfigured() {
     window.WARUNGKU_FIREBASE_ENABLED &&
     window.WARUNGKU_FIREBASE_CONFIG &&
     window.WARUNGKU_FIREBASE_CONFIG.projectId &&
-    !window.WARUNGKU_FIREBASE_CONFIG.projectId.startsWith('ISI_') &&
-    window.firebase
+    !window.WARUNGKU_FIREBASE_CONFIG.projectId.startsWith('ISI_')
   );
 }
 
 function initFirestore() {
-  if (!isFirebaseConfigured()) return null;
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(window.WARUNGKU_FIREBASE_CONFIG);
+  if (!isFirebaseConfigured()) {
+    window.lastFirebaseError = 'Firebase belum aktif atau config belum lengkap.';
+    return null;
   }
 
-  firestoreDb = firestoreDb || firebase.firestore();
-  return firestoreDb;
+  if (!window.firebase) {
+    window.lastFirebaseError = 'Firebase SDK belum termuat. Cek koneksi internet atau script Firebase di index.html.';
+    return null;
+  }
+
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(window.WARUNGKU_FIREBASE_CONFIG);
+    }
+
+    firestoreDb = firestoreDb || firebase.firestore();
+    window.db = firestoreDb;
+    window.lastFirebaseError = '';
+    return firestoreDb;
+  } catch (error) {
+    window.lastFirebaseError = error.message;
+    console.error('Firebase init error:', error);
+    return null;
+  }
 }
 
 function normalizeCartItem(rawItem) {
@@ -274,12 +289,12 @@ function buildOrderPayload(receiptData) {
     discount: receiptData.discount,
     shipping: receiptData.shipping,
     total: receiptData.total,
-    items: cart.map((item) => ({
+    items: receiptData.items.map((item) => ({
       id: item.id,
       name: item.name,
       qty: item.qty,
       price: item.price,
-      total: item.price * item.qty
+      total: item.total
     })),
     createdAtMs: Date.now(),
     createdAt: new Date().toISOString()
@@ -288,16 +303,22 @@ function buildOrderPayload(receiptData) {
 
 async function saveOrderToDatabase(receiptData) {
   const db = initFirestore();
-  if (!db) return;
+  if (!db) {
+    showToast(window.lastFirebaseError || 'Firebase belum terhubung.', 5000);
+    return;
+  }
 
   const orderPayload = buildOrderPayload(receiptData);
   const docId = receiptData.orderNo.replace('#', '');
 
   try {
     await db.collection('orders').doc(docId).set(orderPayload);
-    showToast('Pesanan tersimpan ke database.');
+    console.log('Firebase order saved:', docId);
+    showToast('Pesanan tersimpan ke database Firebase.', 4000);
   } catch (error) {
-    showToast('Pesanan belum tersimpan ke database. Cek Firebase.');
+    window.lastFirebaseError = error.message;
+    console.error('Firestore save error:', error);
+    showToast(`Database gagal: ${error.message}`, 7000);
   }
 }
 
@@ -701,7 +722,14 @@ function buildReceipt() {
     subtotal,
     discount,
     shipping: SHIPPING_COST,
-    total: grandTotal
+    total: grandTotal,
+    items: cart.map((item) => ({
+      id: item.id,
+      name: item.name,
+      qty: item.qty,
+      price: item.price,
+      total: item.price * item.qty
+    }))
   };
 
   saveOrderHistory(window._receiptData);
