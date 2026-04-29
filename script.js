@@ -140,6 +140,17 @@ const formatRp = (n) => 'Rp ' + n.toLocaleString('id-ID');
 const discPrice = (p) => Math.round(p.origPrice * (1 - p.discPercent / 100));
 const $ = (id) => document.getElementById(id);
 
+function getCartTotal() {
+  return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+}
+
+function updatePaymentTotals() {
+  const total = getCartTotal();
+  $('qrisTotal').textContent = formatRp(total);
+  $('codTotal').textContent = formatRp(total);
+  $('codCourierAmount').textContent = formatRp(total);
+}
+
 function normalizeCartItem(rawItem) {
   const product = products.find((item) => item.id === rawItem?.id);
   if (!product) return null;
@@ -344,7 +355,7 @@ function updateCart() {
     $('subtotalAmt').textContent = formatRp(0);
     $('discountAmt').textContent = '- ' + formatRp(0);
     $('totalAmt').textContent = formatRp(0);
-    $('qrisTotal').textContent = formatRp(0);
+    updatePaymentTotals();
     saveCart();
     return;
   }
@@ -375,7 +386,7 @@ function updateCart() {
   $('subtotalAmt').textContent = formatRp(totalOrig);
   $('discountAmt').textContent = '- ' + formatRp(discount);
   $('totalAmt').textContent = formatRp(subtotal);
-  $('qrisTotal').textContent = formatRp(subtotal);
+  updatePaymentTotals();
 
   saveCart();
 }
@@ -439,6 +450,7 @@ function setPaymentMethod(method) {
   $('payCod').classList.toggle('active', method === 'cod');
   $('qrisBox').classList.toggle('hidden', method !== 'qris');
   $('codBox').classList.toggle('hidden', method !== 'cod');
+  updatePaymentTotals();
 }
 
 function openCheckout() {
@@ -679,7 +691,7 @@ $('toStep2Btn').addEventListener('click', () => {
 
   $('step1').classList.add('hidden');
   $('step2').classList.remove('hidden');
-  $('qrisTotal').textContent = formatRp(cart.reduce((sum, item) => sum + item.price * item.qty, 0));
+  updatePaymentTotals();
   if (selectedPayment === 'qris') {
     startQrisTimer();
   }
