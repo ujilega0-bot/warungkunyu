@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Pesanan - WarungKu</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="admin-page">
+  <nav class="admin-nav">
+    <div>
+      <span class="admin-brand"><i class="fas fa-store"></i> WarungKu Admin</span>
+      <p>Dashboard database pesanan pelanggan</p>
+    </div>
+    <a href="index.html" class="admin-back"><i class="fas fa-arrow-left"></i> Kembali ke Toko</a>
+  </nav>
+
+  <main class="admin-wrap">
+    <section class="admin-stats">
+      <div class="admin-stat">
+        <span>Total Pesanan</span>
+        <strong id="adminTotalOrders">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Total Omzet</span>
+        <strong id="adminRevenue">Rp 0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>COD</span>
+        <strong id="adminCodOrders">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>QRIS</span>
+        <strong id="adminQrisOrders">0</strong>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-panel-head">
+        <div>
+          <h1>List Database Pesanan</h1>
+          <p>Data ini diambil langsung dari Firebase Firestore collection <strong>orders</strong>.</p>
+        </div>
+        <button class="admin-refresh" id="refreshOrdersBtn">
+          <i class="fas fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+
+      <div class="admin-alert" id="adminAlert"></div>
+      <div class="admin-orders" id="adminOrders"></div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
