@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 const products = [
   {
@@ -135,20 +135,77 @@ let orderCount = parseInt(localStorage.getItem('wk_order_count') || '0', 10);
 let qrisTimer = null;
 let qtyChanging = false;
 let selectedPayment = 'qris';
+let orderHistory = [];
+
+const ADMIN_WHATSAPP = '6288294519516';
+const STORE_NAME = 'WarungKu Jakarta';
+const CASHIER_NAME = 'Admin WarungKu';
+const ORDER_STATUS = 'Diproses';
+const SHIPPING_COST = 0;
 
 const formatRp = (n) => 'Rp ' + n.toLocaleString('id-ID');
 const discPrice = (p) => Math.round(p.origPrice * (1 - p.discPercent / 100));
 const $ = (id) => document.getElementById(id);
+const formatShipping = () => (SHIPPING_COST === 0 ? 'Gratis' : formatRp(SHIPPING_COST));
+
+let firestoreDb = null;
 
 function getCartTotal() {
   return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
+function getCartGrandTotal() {
+  return getCartTotal() + SHIPPING_COST;
+}
+
 function updatePaymentTotals() {
-  const total = getCartTotal();
+  const total = getCartGrandTotal();
   $('qrisTotal').textContent = formatRp(total);
   $('codTotal').textContent = formatRp(total);
   $('codCourierAmount').textContent = formatRp(total);
+}
+
+function normalizePhoneNumber(value) {
+  const digits = value.replace(/\D/g, '');
+  if (digits.startsWith('08')) return '62' + digits.slice(1);
+  if (digits.startsWith('8')) return '62' + digits;
+  return digits;
+}
+
+function isValidWhatsAppNumber(value) {
+  const normalized = normalizePhoneNumber(value);
+  return /^62\d{9,13}$/.test(normalized);
+}
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
+}
+
+function isFirebaseConfigured() {
+  return Boolean(
+    window.WARUNGKU_FIREBASE_ENABLED &&
+    window.WARUNGKU_FIREBASE_CONFIG &&
+    window.WARUNGKU_FIREBASE_CONFIG.projectId &&
+    !window.WARUNGKU_FIREBASE_CONFIG.projectId.startsWith('ISI_') &&
+    window.firebase
+  );
+}
+
+function initFirestore() {
+  if (!isFirebaseConfigured()) return null;
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(window.WARUNGKU_FIREBASE_CONFIG);
+  }
+
+  firestoreDb = firestoreDb || firebase.firestore();
+  return firestoreDb;
 }
 
 function normalizeCartItem(rawItem) {
@@ -177,6 +234,71 @@ function updateOrderCount() {
 
 function saveCart() {
   localStorage.setItem('wk_cart', JSON.stringify(cart));
+}
+
+function getOrderHistory() {
+  return orderHistory;
+}
+
+function saveOrderHistory(receiptData) {
+  const itemSummary = cart.map((item) => `${item.name} (${item.qty}x)`);
+  orderHistory.unshift({
+    orderNo: receiptData.orderNo,
+    dateStr: receiptData.dateStr,
+    timeStr: receiptData.timeStr,
+    name: receiptData.name,
+    paymentMethod: receiptData.paymentMethod,
+    paymentStatus: receiptData.paymentStatus,
+    orderStatus: receiptData.orderStatus,
+    total: receiptData.total,
+    items: itemSummary
+  });
+  orderHistory = orderHistory.slice(0, 10);
+}
+
+function buildOrderPayload(receiptData) {
+  return {
+    orderNo: receiptData.orderNo,
+    name: receiptData.name,
+    phone: receiptData.phone,
+    address: receiptData.address,
+    note: receiptData.note,
+    storeName: receiptData.storeName,
+    cashierName: receiptData.cashierName,
+    dateStr: receiptData.dateStr,
+    timeStr: receiptData.timeStr,
+    paymentMethod: receiptData.paymentMethod,
+    paymentStatus: receiptData.paymentStatus,
+    orderStatus: receiptData.orderStatus,
+    subtotal: receiptData.subtotal,
+    discount: receiptData.discount,
+    shipping: receiptData.shipping,
+    total: receiptData.total,
+    items: cart.map((item) => ({
+      id: item.id,
+      name: item.name,
+      qty: item.qty,
+      price: item.price,
+      total: item.price * item.qty
+    })),
+    createdAtMs: Date.now(),
+    createdAt: new Date().toISOString()
+  };
+}
+
+async function saveOrderToDatabase(receiptData) {
+  const db = initFirestore();
+  if (!db) return;
+
+  const orderPayload = buildOrderPayload(receiptData);
+  const docId = receiptData.orderNo.replace('#', '');
+
+  try {
+    await db.collection('orders').doc(docId).set(orderPayload);
+    showToast('Pesanan tersimpan ke database.');
+  } catch (error) {
+    showToast('Pesanan belum tersimpan ke database. Cek Firebase.');
+  }
 }
 
 function loadCart() {
@@ -354,6 +476,7 @@ function updateCart() {
     footerEl.style.display = 'none';
     $('subtotalAmt').textContent = formatRp(0);
     $('discountAmt').textContent = '- ' + formatRp(0);
+    $('shippingAmt').textContent = formatShipping();
     $('totalAmt').textContent = formatRp(0);
     updatePaymentTotals();
     saveCart();
@@ -385,7 +508,8 @@ function updateCart() {
 
   $('subtotalAmt').textContent = formatRp(totalOrig);
   $('discountAmt').textContent = '- ' + formatRp(discount);
-  $('totalAmt').textContent = formatRp(subtotal);
+  $('shippingAmt').textContent = formatShipping();
+  $('totalAmt').textContent = formatRp(subtotal + SHIPPING_COST);
   updatePaymentTotals();
 
   saveCart();
@@ -515,6 +639,7 @@ function buildReceipt() {
   const totalOrig = cart.reduce((sum, item) => sum + item.origPrice * item.qty, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const discount = totalOrig - subtotal;
+  const grandTotal = subtotal + SHIPPING_COST;
 
   const paymentMethodLabel = selectedPayment === 'cod' ? 'COD' : 'QRIS';
   const paymentStatusLabel = selectedPayment === 'cod' ? 'Bayar di Tempat' : '\u2705 LUNAS';
@@ -522,15 +647,18 @@ function buildReceipt() {
   $('rOrderNo').textContent = orderNo;
   $('rDate').textContent = dateStr;
   $('rTime').textContent = timeStr;
+  $('rCashier').textContent = CASHIER_NAME;
   $('rName').textContent = name;
-  $('rPhone').textContent = phone;
+  $('rPhone').textContent = normalizePhoneNumber(phone);
   $('rAddress').textContent = address;
   $('rSubtotal').textContent = formatRp(totalOrig);
   $('rDiscount').textContent = '- ' + formatRp(discount);
-  $('rTotal').textContent = formatRp(subtotal);
+  $('rShipping').textContent = formatShipping();
+  $('rTotal').textContent = formatRp(grandTotal);
   $('rBarcodeNum').textContent = barcode;
   $('rPaymentMethod').textContent = paymentMethodLabel;
   $('rPaymentStatus').textContent = paymentStatusLabel;
+  $('rOrderStatus').textContent = ORDER_STATUS;
   $('rPaymentStatus').classList.toggle('cod-badge', selectedPayment === 'cod');
   $('rPaymentStatus').classList.toggle('paid-badge', selectedPayment !== 'cod');
 
@@ -550,7 +678,7 @@ function buildReceipt() {
 
   const noteSection = $('rNote');
   if (note) {
-    noteSection.innerHTML = `<strong>\u{1F4DD} Catatan:</strong><br>${note}`;
+    noteSection.innerHTML = `<strong>\u{1F4DD} Catatan:</strong><br>${escapeHtml(note)}`;
     noteSection.classList.add('visible');
   } else {
     noteSection.innerHTML = '';
@@ -559,18 +687,25 @@ function buildReceipt() {
 
   window._receiptData = {
     name,
-    phone,
+    phone: normalizePhoneNumber(phone),
     address,
     note,
     orderNo,
     dateStr,
     timeStr,
+    storeName: STORE_NAME,
+    cashierName: CASHIER_NAME,
+    orderStatus: ORDER_STATUS,
     paymentMethod: paymentMethodLabel,
     paymentStatus: paymentStatusLabel,
     subtotal,
     discount,
-    total: subtotal
+    shipping: SHIPPING_COST,
+    total: grandTotal
   };
+
+  saveOrderHistory(window._receiptData);
+  saveOrderToDatabase(window._receiptData);
 }
 
 function openReceipt() {
@@ -604,6 +739,8 @@ function sendToWhatsApp() {
     `\u{1F4CB} *No. Order:* ${receiptData.orderNo}`,
     `\u{1F4C5} *Tanggal:* ${receiptData.dateStr}`,
     `\u23F0 *Waktu:* ${receiptData.timeStr}`,
+    `\u{1F3EA} *Toko:* ${receiptData.storeName}`,
+    `\u{1F9D1}\u200D\u{1F4BC} *Kasir:* ${receiptData.cashierName}`,
     divider,
     `\u{1F464} *Nama:* ${receiptData.name}`,
     `\u{1F4F1} *WhatsApp:* ${receiptData.phone}`,
@@ -614,23 +751,101 @@ function sendToWhatsApp() {
     divider,
     `\u{1F4B0} Subtotal: ${formatRp(receiptData.subtotal + receiptData.discount)}`,
     `\u{1F381} Diskon: - ${formatRp(receiptData.discount)}`,
+    `\u{1F69A} Ongkir: ${receiptData.shipping === 0 ? 'Gratis' : formatRp(receiptData.shipping)}`,
     `\u{1F4B3} *TOTAL: ${formatRp(receiptData.total)}*`,
     divider,
     `\u{1F4B3} *Pembayaran: ${receiptData.paymentMethod} ${receiptData.paymentStatus}*`,
+    `\u{1F4E6} *Status Pesanan: ${receiptData.orderStatus}*`,
     receiptData.note ? `\u{1F4DD} Catatan: ${receiptData.note}` : '',
     divider,
     'Terima kasih sudah belanja di WarungKu! \u{1F64F}'
   ].filter(Boolean).join('\n');
 
-  const waNumber = '6288294519516';
-  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
   showToast('\u2705 Membuka WhatsApp...');
   setTimeout(closeReceipt, 800);
+}
+
+function printReceipt() {
+  if (!window._receiptData) {
+    showToast('Struk belum tersedia untuk dicetak.');
+    return;
+  }
+
+  showToast('Menyiapkan struk untuk dicetak...');
+  setTimeout(() => window.print(), 250);
+}
+
+function renderOrderHistory() {
+  const history = getOrderHistory();
+  const list = $('historyList');
+
+  if (!history.length) {
+    list.innerHTML = `
+      <div class="history-empty">
+        <i class="fas fa-receipt"></i>
+        <strong>Belum ada pesanan</strong>
+        <span>Riwayat akan muncul setelah checkout berhasil.</span>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = history.map((order) => `
+    <div class="history-item">
+      <div class="history-top">
+        <strong>${escapeHtml(order.orderNo)}</strong>
+        <span>${formatRp(order.total)}</span>
+      </div>
+      <div class="history-meta">${escapeHtml(order.dateStr)} - ${escapeHtml(order.timeStr)}</div>
+      <div class="history-meta">Pelanggan: ${escapeHtml(order.name)}</div>
+      <div class="history-meta">Pembayaran: ${escapeHtml(order.paymentMethod)} (${escapeHtml(order.paymentStatus)})</div>
+      <div class="history-status">${escapeHtml(order.orderStatus)}</div>
+      <div class="history-items">${escapeHtml((order.items || []).join(', '))}</div>
+    </div>
+  `).join('');
+}
+
+function openOrderHistory() {
+  renderOrderHistory();
+  $('historyOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOrderHistory() {
+  $('historyOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function sendContactToWhatsApp() {
+  const name = $('contactName').value.trim();
+  const email = $('contactEmail').value.trim();
+  const message = $('contactMessage').value.trim();
+
+  if (!name || !email || !message) {
+    showToast('Lengkapi nama, email, dan pesan dulu.');
+    return;
+  }
+
+  const msg = [
+    '*PESAN KONTAK WARUNGKU*',
+    '--------------------',
+    `Nama: ${name}`,
+    `Email: ${email}`,
+    `Pesan: ${message}`
+  ].join('\n');
+
+  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+  showToast('Membuka WhatsApp admin...');
+  $('contactForm').reset();
 }
 
 $('cartBtn').addEventListener('click', openCart);
 $('cartClose').addEventListener('click', closeCart);
 $('cartOverlay').addEventListener('click', closeCart);
+$('userBtn').addEventListener('click', openOrderHistory);
+$('userBtn').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') openOrderHistory();
+});
 
 $('checkoutBtn').addEventListener('click', () => {
   if (!cart.length) {
@@ -683,6 +898,12 @@ $('toStep2Btn').addEventListener('click', () => {
     return;
   }
 
+  if (!isValidWhatsAppNumber(phone)) {
+    showToast('Nomor WhatsApp harus valid, contoh: 08123456789');
+    $('custPhone').focus();
+    return;
+  }
+
   if (!address) {
     showToast('\u26A0\uFE0F Alamat harus diisi!');
     $('custAddress').focus();
@@ -718,6 +939,11 @@ $('receiptOverlay').addEventListener('click', (e) => {
 });
 
 $('sendWaBtn').addEventListener('click', sendToWhatsApp);
+$('printReceiptBtn').addEventListener('click', printReceipt);
+$('historyClose').addEventListener('click', closeOrderHistory);
+$('historyOverlay').addEventListener('click', (e) => {
+  if (e.target === $('historyOverlay')) closeOrderHistory();
+});
 
 document.querySelectorAll('.cat-btn[data-cat]').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -780,8 +1006,7 @@ const contactForm = $('contactForm');
 if (contactForm) {
   contactForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    showToast('Pesan Anda berhasil dikirim!');
-    contactForm.reset();
+    sendContactToWhatsApp();
   });
 }
 
@@ -793,6 +1018,7 @@ if (backToTop) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  localStorage.removeItem('wk_order_history');
   loadCart();
   renderProducts();
   updateCart();
