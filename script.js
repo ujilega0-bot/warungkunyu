@@ -148,8 +148,6 @@ const discPrice = (p) => Math.round(p.origPrice * (1 - p.discPercent / 100));
 const $ = (id) => document.getElementById(id);
 const formatShipping = () => (SHIPPING_COST === 0 ? 'Gratis' : formatRp(SHIPPING_COST));
 
-let firestoreDb = null;
-
 function getCartTotal() {
   return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
@@ -185,61 +183,6 @@ function escapeHtml(value = '') {
     '"': '&quot;',
     "'": '&#039;'
   }[char]));
-}
-
-function isFirebaseConfigured() {
-  return Boolean(
-    window.WARUNGKU_FIREBASE_ENABLED &&
-    window.WARUNGKU_FIREBASE_CONFIG &&
-    window.WARUNGKU_FIREBASE_CONFIG.projectId &&
-    !window.WARUNGKU_FIREBASE_CONFIG.projectId.startsWith('ISI_')
-  );
-}
-
-function initFirestore() {
-  if (!isFirebaseConfigured()) {
-    window.lastFirebaseError = 'Firebase belum aktif atau config belum lengkap.';
-    return null;
-  }
-
-  if (!window.firebase) {
-    window.lastFirebaseError = 'Firebase SDK belum termuat. Cek koneksi internet atau script Firebase di index.html.';
-    return null;
-  }
-
-  try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(window.WARUNGKU_FIREBASE_CONFIG);
-    }
-
-    firestoreDb = firestoreDb || firebase.firestore();
-    window.db = firestoreDb;
-    window.lastFirebaseError = '';
-    return firestoreDb;
-  } catch (error) {
-    window.lastFirebaseError = error.message;
-    console.error('Firebase init error:', error);
-    return null;
-  }
-}
-
-function getFirebaseErrorMessage(error) {
-  const message = error?.message || 'Terjadi kesalahan Firebase.';
-  const code = error?.code || '';
-
-  if (code.includes('permission-denied') || message.toLowerCase().includes('permission')) {
-    return 'Izin Firestore ditolak. Cek Firestore Rules dan izinkan read/write untuk collection orders.';
-  }
-
-  if (code.includes('unavailable') || message.toLowerCase().includes('network')) {
-    return 'Firebase tidak bisa diakses. Cek koneksi internet lalu coba lagi.';
-  }
-
-  if (code.includes('not-found')) {
-    return 'Firestore Database belum dibuat. Buat Firestore Database dulu di Firebase Console.';
-  }
-
-  return message;
 }
 
 function normalizeCartItem(rawItem) {
@@ -287,60 +230,6 @@ function saveOrderHistory(receiptData) {
     total: receiptData.total,
     items: itemSummary
   });
-  orderHistory = orderHistory.slice(0, 10);
-}
-
-function buildOrderPayload(receiptData) {
-  return {
-    orderNo: receiptData.orderNo,
-    name: receiptData.name,
-    phone: receiptData.phone,
-    address: receiptData.address,
-    note: receiptData.note,
-    storeName: receiptData.storeName,
-    cashierName: receiptData.cashierName,
-    dateStr: receiptData.dateStr,
-    timeStr: receiptData.timeStr,
-    paymentMethod: receiptData.paymentMethod,
-    paymentStatus: receiptData.paymentStatus,
-    orderStatus: receiptData.orderStatus,
-    subtotal: receiptData.subtotal,
-    discount: receiptData.discount,
-    shipping: receiptData.shipping,
-    total: receiptData.total,
-    items: receiptData.items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      qty: item.qty,
-      price: item.price,
-      total: item.total
-    })),
-    createdAtMs: Date.now(),
-    createdAt: new Date().toISOString()
-  };
-}
-
-async function saveOrderToDatabase(receiptData) {
-  const db = initFirestore();
-  if (!db) {
-    showToast(window.lastFirebaseError || 'Firebase belum terhubung.', 5000);
-    return false;
-  }
-
-  const orderPayload = buildOrderPayload(receiptData);
-  const docId = receiptData.orderNo.replace('#', '');
-
-  try {
-    await db.collection('orders').doc(docId).set(orderPayload);
-    console.log('Firebase order saved:', docId);
-    showToast('Pesanan tersimpan ke database Firebase.', 4000);
-    return true;
-  } catch (error) {
-    window.lastFirebaseError = getFirebaseErrorMessage(error);
-    console.error('Firestore save error:', error);
-    showToast(`Database gagal: ${window.lastFirebaseError}`, 8000);
-    return false;
-  }
 }
 
 function loadCart() {
@@ -811,7 +700,6 @@ function sendToWhatsApp() {
 
   window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
   showToast('\u2705 Membuka WhatsApp...');
-  setTimeout(closeReceipt, 800);
 }
 
 function printReceipt() {
@@ -973,19 +861,21 @@ $('backToStep1').addEventListener('click', () => {
   resetQrisTimerDisplay();
 });
 
-$('confirmPayBtn').addEventListener('click', async () => {
+$('confirmPayBtn').addEventListener('click', () => {
   const confirmBtn = $('confirmPayBtn');
   if (confirmBtn.disabled) return;
 
   confirmBtn.disabled = true;
   confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
   stopQrisTimer();
   updateOrderCount();
   closeCheckout();
   buildReceipt();
-  showToast('Menyimpan pesanan ke database...', 3000);
-  await saveOrderToDatabase(window._receiptData);
+
+  // Tampilkan struk. Pengiriman ke WhatsApp dilakukan dari tombol di struk.
   openReceipt();
+
   confirmBtn.disabled = false;
   confirmBtn.innerHTML = '<i class="fas fa-check"></i> Konfirmasi Bayar';
 });
