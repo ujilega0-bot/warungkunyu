@@ -713,16 +713,6 @@ function closeReceipt() {
   });
 }
 
-function printReceipt() {
-  if (!window._receiptData) {
-    showToast('Struk belum tersedia untuk dicetak.');
-    return;
-  }
-
-  showToast('Menyiapkan struk untuk dicetak...');
-  setTimeout(() => window.print(), 250);
-}
-
 function renderOrderHistory() {
   const history = getOrderHistory();
   const list = $('historyList');
@@ -896,7 +886,6 @@ $('receiptOverlay').addEventListener('click', (e) => {
   if (e.target === $('receiptOverlay')) closeReceipt();
 });
 
-$('printReceiptBtn').addEventListener('click', printReceipt);
 $('historyClose').addEventListener('click', closeOrderHistory);
 $('historyOverlay').addEventListener('click', (e) => {
   if (e.target === $('historyOverlay')) closeOrderHistory();
