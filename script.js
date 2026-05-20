@@ -138,6 +138,7 @@ let selectedPayment = 'qris';
 let orderHistory = [];
 
 const ADMIN_WHATSAPP = '6288294519516';
+const POS_ONLINE_ORDERS_KEY = 'pos.onlineOrders';
 const STORE_NAME = 'WarungKu Jakarta';
 const CASHIER_NAME = 'Admin WarungKu';
 const ORDER_STATUS = 'Diproses';
@@ -230,6 +231,56 @@ function saveOrderHistory(receiptData) {
     total: receiptData.total,
     items: itemSummary
   });
+}
+
+function loadPosOnlineOrders() {
+  try {
+    const raw = localStorage.getItem(POS_ONLINE_ORDERS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePosOnlineOrders(orders) {
+  localStorage.setItem(POS_ONLINE_ORDERS_KEY, JSON.stringify(orders));
+}
+
+function buildPosOrder(receiptData) {
+  const noteLines = [
+    receiptData.note,
+    `No. Order: ${receiptData.orderNo}`,
+    `WA: ${receiptData.phone}`,
+    `Alamat: ${receiptData.address}`,
+    `Pembayaran: ${receiptData.paymentMethod} ${receiptData.paymentStatus}`
+  ].filter(Boolean);
+
+  return {
+    id: receiptData.orderNo.replace(/[^A-Z0-9]/gi, ''),
+    customerName: receiptData.name || 'Pelanggan Website',
+    source: 'Website WarungKu',
+    note: noteLines.join(' | ') || '-',
+    createdAt: new Date().toISOString(),
+    status: 'baru',
+    items: receiptData.items.map((item) => ({
+      nama: item.name,
+      harga: item.price,
+      qty: item.qty
+    }))
+  };
+}
+
+function sendOrderToPOS(receiptData) {
+  if (!receiptData) return false;
+
+  const posOrder = buildPosOrder(receiptData);
+  const orders = loadPosOnlineOrders().filter((order) => order?.id !== posOrder.id);
+  orders.unshift(posOrder);
+  savePosOnlineOrders(orders.slice(0, 50));
+  window._lastPosOrder = posOrder;
+
+  return true;
 }
 
 function loadCart() {
@@ -643,6 +694,7 @@ function buildReceipt() {
   };
 
   saveOrderHistory(window._receiptData);
+  sendOrderToPOS(window._receiptData);
 }
 
 function openReceipt() {
@@ -659,47 +711,6 @@ function closeReceipt() {
   ['custName', 'custPhone', 'custAddress', 'custNote'].forEach((id) => {
     $(id).value = '';
   });
-}
-
-function sendToWhatsApp() {
-  const receiptData = window._receiptData;
-  if (!receiptData) return;
-
-  const divider = '--------------------';
-  const itemLines = cart.length
-    ? cart.map((item) => `- ${item.name} (${item.qty}x) = ${formatRp(item.price * item.qty)}`).join('\n')
-    : '(kosong)';
-
-  const msg = [
-    '\u{1F6D2} *PESANAN WARUNGKU*',
-    divider,
-    `\u{1F4CB} *No. Order:* ${receiptData.orderNo}`,
-    `\u{1F4C5} *Tanggal:* ${receiptData.dateStr}`,
-    `\u23F0 *Waktu:* ${receiptData.timeStr}`,
-    `\u{1F3EA} *Toko:* ${receiptData.storeName}`,
-    `\u{1F9D1}\u200D\u{1F4BC} *Kasir:* ${receiptData.cashierName}`,
-    divider,
-    `\u{1F464} *Nama:* ${receiptData.name}`,
-    `\u{1F4F1} *WhatsApp:* ${receiptData.phone}`,
-    `\u{1F4CD} *Alamat:* ${receiptData.address}`,
-    divider,
-    '\u{1F6CD}\uFE0F *DETAIL PESANAN:*',
-    itemLines,
-    divider,
-    `\u{1F4B0} Subtotal: ${formatRp(receiptData.subtotal + receiptData.discount)}`,
-    `\u{1F381} Diskon: - ${formatRp(receiptData.discount)}`,
-    `\u{1F69A} Ongkir: ${receiptData.shipping === 0 ? 'Gratis' : formatRp(receiptData.shipping)}`,
-    `\u{1F4B3} *TOTAL: ${formatRp(receiptData.total)}*`,
-    divider,
-    `\u{1F4B3} *Pembayaran: ${receiptData.paymentMethod} ${receiptData.paymentStatus}*`,
-    `\u{1F4E6} *Status Pesanan: ${receiptData.orderStatus}*`,
-    receiptData.note ? `\u{1F4DD} Catatan: ${receiptData.note}` : '',
-    divider,
-    'Terima kasih sudah belanja di WarungKu! \u{1F64F}'
-  ].filter(Boolean).join('\n');
-
-  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
-  showToast('\u2705 Membuka WhatsApp...');
 }
 
 function printReceipt() {
@@ -873,7 +884,7 @@ $('confirmPayBtn').addEventListener('click', () => {
   closeCheckout();
   buildReceipt();
 
-  // Tampilkan struk. Pengiriman ke WhatsApp dilakukan dari tombol di struk.
+  showToast('Pesanan selesai dan masuk ke POS admin.');
   openReceipt();
 
   confirmBtn.disabled = false;
@@ -885,7 +896,6 @@ $('receiptOverlay').addEventListener('click', (e) => {
   if (e.target === $('receiptOverlay')) closeReceipt();
 });
 
-$('sendWaBtn').addEventListener('click', sendToWhatsApp);
 $('printReceiptBtn').addEventListener('click', printReceipt);
 $('historyClose').addEventListener('click', closeOrderHistory);
 $('historyOverlay').addEventListener('click', (e) => {
