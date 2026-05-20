@@ -435,6 +435,10 @@
           </div>
           <div class="receipt-divider dashed"></div>
           <div id="rNote" class="receipt-note-section"></div>
+          <div class="receipt-save-notice">
+            <i class="fas fa-circle-info"></i>
+            Simpan struk ini sampai makanan/minuman diterima.
+          </div>
           <div class="receipt-footer">
             <div class="rf-thanks">Terima kasih telah berbelanja!</div>
             <div class="rf-sub">Pesanan akan segera diproses 😊</div>
@@ -455,6 +459,9 @@
       </div>
 
       <div class="receipt-actions">
+        <button class="ra-btn save-receipt-btn" id="saveReceiptBtn">
+          <i class="fas fa-download"></i> Simpan Struk
+        </button>
         <button class="ra-btn whatsapp-btn" id="receiptWhatsApp">
           <i class="fab fa-whatsapp"></i> Hubungi Admin Pesanan
         </button>
@@ -554,6 +561,7 @@
     <div class="footer-bottom">© 2026 WarungKu. All rights reserved.</div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="script.js"></script>
 </body>
 </html>
