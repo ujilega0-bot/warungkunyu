@@ -782,6 +782,23 @@ body {
   margin-bottom: 14px; display: none;
 }
 .receipt-note-section.visible { display: block; }
+.receipt-save-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.receipt-save-notice i {
+  margin-top: 2px;
+}
 
 .receipt-footer { text-align: center; }
 .rf-thanks { font-size: 16px; font-weight: 900; color: var(--dark); }
@@ -819,6 +836,15 @@ body {
 }
 .close-btn { background: #f1f5f9; color: var(--text); }
 .close-btn:hover { background: var(--border); }
+.save-receipt-btn { background: var(--dark); color: white; }
+.save-receipt-btn:hover { background: #0f172a; transform: translateY(-1px); }
+.save-receipt-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+.whatsapp-btn { background: #22c55e; color: white; }
+.whatsapp-btn:hover { background: #16a34a; transform: translateY(-1px); }
 
 /* Order History */
 .history-modal { max-width: 520px; }
@@ -852,6 +878,28 @@ body {
 .history-items {
   font-size: 12px; color: var(--text);
   background: white; border-radius: 8px; padding: 8px;
+}
+.history-wa-btn {
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: #22c55e;
+  color: white;
+  padding: 11px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.history-wa-btn:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
 }
 
 @media print {
