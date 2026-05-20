@@ -817,8 +817,6 @@ body {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   transition: all 0.3s; font-family: inherit;
 }
-.print-btn { background: var(--dark); color: white; }
-.print-btn:hover { background: #334155; transform: translateY(-1px); }
 .close-btn { background: #f1f5f9; color: var(--text); }
 .close-btn:hover { background: var(--border); }
 
