@@ -219,18 +219,32 @@ function getOrderHistory() {
 }
 
 function saveOrderHistory(receiptData) {
-  const itemSummary = cart.map((item) => `${item.name} (${item.qty}x)`);
   orderHistory.unshift({
     orderNo: receiptData.orderNo,
     dateStr: receiptData.dateStr,
     timeStr: receiptData.timeStr,
     name: receiptData.name,
+    phone: receiptData.phone,
+    address: receiptData.address,
+    note: receiptData.note,
     paymentMethod: receiptData.paymentMethod,
     paymentStatus: receiptData.paymentStatus,
     orderStatus: receiptData.orderStatus,
     total: receiptData.total,
-    items: itemSummary
+    items: receiptData.items.map((item) => `${item.name} (${item.qty}x)`),
+    itemDetails: receiptData.items
   });
+  localStorage.setItem('wk_order_history', JSON.stringify(orderHistory.slice(0, 20)));
+}
+
+function loadOrderHistory() {
+  try {
+    const saved = localStorage.getItem('wk_order_history');
+    const parsed = saved ? JSON.parse(saved) : [];
+    orderHistory = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    orderHistory = [];
+  }
 }
 
 function loadPosOnlineOrders() {
@@ -738,6 +752,9 @@ function renderOrderHistory() {
       <div class="history-meta">Pembayaran: ${escapeHtml(order.paymentMethod)} (${escapeHtml(order.paymentStatus)})</div>
       <div class="history-status">${escapeHtml(order.orderStatus)}</div>
       <div class="history-items">${escapeHtml((order.items || []).join(', '))}</div>
+      <button class="history-wa-btn" data-order-no="${escapeHtml(order.orderNo)}">
+        <i class="fab fa-whatsapp"></i> Hubungi Admin Pesanan
+      </button>
     </div>
   `).join('');
 }
@@ -751,6 +768,84 @@ function openOrderHistory() {
 function closeOrderHistory() {
   $('historyOverlay').classList.remove('active');
   document.body.style.overflow = '';
+}
+
+function buildOrderSupportMessage(order) {
+  const sourceItems = order.itemDetails || order.items || [];
+  const itemLines = sourceItems.map((item) => {
+    if (typeof item === 'string') return `- ${item}`;
+    const itemTotal = item.total || (item.price || 0) * (item.qty || 0);
+    return `- ${item.name} (${item.qty}x) - ${formatRp(item.price || 0)} = ${formatRp(itemTotal)}`;
+  }).join('\n');
+
+  return [
+    '*PERMINTAAN BANTUAN PESANAN WARUNGKU*',
+    '--------------------',
+    `No. Order: ${order.orderNo}`,
+    `Tanggal: ${order.dateStr || '-'}`,
+    `Waktu: ${order.timeStr || '-'}`,
+    `Nama: ${order.name || '-'}`,
+    `WhatsApp: ${order.phone || '-'}`,
+    `Alamat: ${order.address || '-'}`,
+    `Metode Bayar: ${order.paymentMethod || '-'}`,
+    `Status Bayar: ${order.paymentStatus || '-'}`,
+    `Status Pesanan: ${order.orderStatus || '-'}`,
+    '',
+    '*DETAIL MENU PESANAN*',
+    itemLines || '-',
+    '',
+    `Total: ${formatRp(order.total || 0)}`,
+    '',
+    '*PERMINTAAN PELANGGAN*',
+    'Mohon bantuan untuk pesanan ini:',
+    '- ',
+    '',
+    'Contoh: tambah topping, ubah level pedas, tanpa sambal, atau ada menu yang perlu dikonfirmasi.'
+  ].join('\n');
+}
+
+function openOrderSupportWhatsApp(order) {
+  if (!order) {
+    showToast('Pesanan belum ditemukan. Checkout dulu lewat web.');
+    return;
+  }
+
+  const msg = buildOrderSupportMessage(order);
+  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+  showToast('Membuka WhatsApp admin pesanan...');
+}
+
+async function saveReceiptImage() {
+  const receipt = $('receiptPaper');
+  const saveBtn = $('saveReceiptBtn');
+  const orderNo = (window._receiptData?.orderNo || 'struk-warungku').replace(/[^a-z0-9-]/gi, '');
+
+  if (!window.html2canvas) {
+    showToast('Fitur simpan gambar belum siap. Pastikan internet aktif lalu coba lagi.', 3500);
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+  try {
+    const canvas = await window.html2canvas(receipt, {
+      backgroundColor: '#ffffff',
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      useCORS: true
+    });
+
+    const link = document.createElement('a');
+    link.download = `struk-warungku-${orderNo}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Struk berhasil disimpan. Cek folder Download/Galeri.');
+  } catch {
+    showToast('Struk belum bisa disimpan. Coba ulang beberapa saat lagi.', 3500);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-download"></i> Simpan Struk';
+  }
 }
 
 function sendContactToWhatsApp() {
@@ -882,6 +977,10 @@ $('confirmPayBtn').addEventListener('click', () => {
 });
 
 $('receiptClose').addEventListener('click', closeReceipt);
+$('saveReceiptBtn').addEventListener('click', saveReceiptImage);
+$('receiptWhatsApp').addEventListener('click', () => {
+  openOrderSupportWhatsApp(window._receiptData);
+});
 $('receiptOverlay').addEventListener('click', (e) => {
   if (e.target === $('receiptOverlay')) closeReceipt();
 });
@@ -889,6 +988,14 @@ $('receiptOverlay').addEventListener('click', (e) => {
 $('historyClose').addEventListener('click', closeOrderHistory);
 $('historyOverlay').addEventListener('click', (e) => {
   if (e.target === $('historyOverlay')) closeOrderHistory();
+});
+
+$('historyList').addEventListener('click', (e) => {
+  const btn = e.target.closest('.history-wa-btn');
+  if (!btn) return;
+
+  const order = orderHistory.find((item) => item.orderNo === btn.dataset.orderNo);
+  openOrderSupportWhatsApp(order);
 });
 
 document.querySelectorAll('.cat-btn[data-cat]').forEach((btn) => {
@@ -964,7 +1071,7 @@ if (backToTop) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  localStorage.removeItem('wk_order_history');
+  loadOrderHistory();
   loadCart();
   renderProducts();
   updateCart();
