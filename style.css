@@ -819,8 +819,6 @@ body {
 }
 .print-btn { background: var(--dark); color: white; }
 .print-btn:hover { background: #334155; transform: translateY(-1px); }
-.wa-btn    { background: #25d366; color: white; }
-.wa-btn:hover { background: #128c7e; transform: translateY(-1px); }
 .close-btn { background: #f1f5f9; color: var(--text); }
 .close-btn:hover { background: var(--border); }
 
