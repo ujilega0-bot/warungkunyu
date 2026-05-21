@@ -1,131 +1,136 @@
 'use strict';
 
+const onlineImage = (query, lock) => {
+  const keywords = query.trim().toLowerCase().replace(/[^a-z0-9]+/g, ',').replace(/^,|,$/g, '');
+  return `https://loremflickr.com/600/450/${keywords}?lock=${lock}`;
+};
+
 const products = [
   {
     id: 1, cat: 'minuman', name: 'Brown Sugar Boba',
     desc: 'Minuman boba premium dengan gula aren asli dan susu segar berkualitas tinggi.',
     rating: 4.9, reviews: 1234,
     origPrice: 28000, discPercent: 20, popular: true,
-    image: 'gambar/jeruk.webp'
+    image: onlineImage('brown sugar boba milk tea', 101)
   },
   {
     id: 2, cat: 'minuman', name: 'Matcha Latte',
     desc: 'Matcha Jepang grade premium dengan susu oat yang creamy dan menyegarkan.',
     rating: 4.8, reviews: 876,
     origPrice: 32000, discPercent: 15, popular: false,
-    image: 'gambar/caramel.jpg'
+    image: onlineImage('iced matcha latte', 102)
   },
   {
     id: 3, cat: 'minuman', name: 'Strawberry Smoothie',
     desc: 'Smoothie segar dari stroberi segar pilihan tanpa tambahan gula.',
     rating: 4.7, reviews: 654,
     origPrice: 25000, discPercent: 10, popular: false,
-    image: 'gambar/sop buah.jpg'
+    image: onlineImage('strawberry smoothie', 103)
   },
   {
     id: 4, cat: 'minuman', name: 'Kopi Susu Kekinian',
     desc: 'Kopi arabika spesial dipadukan susu segar dengan sedikit gula aren.',
     rating: 4.9, reviews: 2100,
     origPrice: 22000, discPercent: 25, popular: true,
-    image: 'gambar/jamu.jpg'
+    image: onlineImage('iced milk coffee', 104)
   },
   {
     id: 5, cat: 'minuman', name: 'Jus Alpukat Krim',
     desc: 'Alpukat Wonosobo premium diblender lembut dengan susu kental manis.',
     rating: 4.6, reviews: 431,
     origPrice: 27000, discPercent: 5, popular: false,
-    image: 'gambar/caramel.jpg'
+    image: onlineImage('avocado smoothie', 105)
   },
   {
     id: 6, cat: 'minuman', name: 'Es Teh Leci Soda',
     desc: 'Teh premium dengan topping buah leci dan soda water yang menyegarkan.',
     rating: 4.5, reviews: 312,
     origPrice: 20000, discPercent: 30, popular: true,
-    image: 'gambar/sup.jpg'
+    image: onlineImage('lychee iced tea', 106)
   },
   {
     id: 7, cat: 'makanan', name: 'Mie Ayam Spesial',
     desc: 'Mie kenyal dengan ayam cincang berbumbu khas, lengkap dengan pangsit.',
     rating: 4.9, reviews: 3456,
     origPrice: 35000, discPercent: 15, popular: true,
-    image: 'gambar/sate.jpg'
+    image: onlineImage('chicken noodle soup', 107)
   },
   {
     id: 8, cat: 'makanan', name: 'Nasi Goreng Kampung',
     desc: 'Nasi goreng tradisional dengan cita rasa autentik, telur mata sapi, dan kerupuk.',
     rating: 4.8, reviews: 2876,
     origPrice: 30000, discPercent: 20, popular: true,
-    image: 'gambar/telor.jpg'
+    image: onlineImage('indonesian fried rice', 108)
   },
   {
     id: 9, cat: 'makanan', name: 'Soto Ayam Lamongan',
     desc: 'Soto kuning khas Lamongan dengan kunyit, soun, dan telur rebus bumbu koya.',
     rating: 4.7, reviews: 1543,
     origPrice: 28000, discPercent: 10, popular: false,
-    image: 'gambar/uduk.jpg'
+    image: onlineImage('indonesian chicken soup', 109)
   },
   {
     id: 10, cat: 'makanan', name: 'Nasi Box Komplit',
     desc: 'Nasi putih dengan ayam goreng, tempe, sambal, dan sayur lalapan segar.',
     rating: 4.8, reviews: 987,
     origPrice: 42000, discPercent: 25, popular: true,
-    image: 'gambar/rendang.jpg'
+    image: onlineImage('indonesian rice box', 110)
   },
   {
     id: 11, cat: 'makanan', name: 'Ayam Bakar Taliwang',
     desc: 'Ayam bakar bumbu Taliwang khas Lombok, pedas gurih dan menggugah selera.',
     rating: 4.9, reviews: 765,
     origPrice: 48000, discPercent: 12, popular: false,
-    image: 'gambar/daging.jpg'
+    image: onlineImage('grilled chicken indonesian food', 111)
   },
   {
     id: 12, cat: 'makanan', name: 'Gado-Gado Jakarta',
     desc: 'Sayuran segar dengan bumbu kacang kental spesial dan kerupuk udang.',
     rating: 4.6, reviews: 432,
     origPrice: 25000, discPercent: 8, popular: false,
-    image: 'gambar/telor.jpg'
+    image: onlineImage('gado gado salad', 112)
   },
   {
     id: 13, cat: 'cemilan', name: 'Kentang Goreng Crispy',
     desc: 'Kentang goreng triple crispy dengan berbagai pilihan saus dip spesial.',
     rating: 4.8, reviews: 2134,
     origPrice: 20000, discPercent: 30, popular: true,
-    image: `gambar/kentang.jpg`
+    image: onlineImage('crispy french fries', 113)
   },
   {
     id: 14, cat: 'cemilan', name: 'Telur Gulung Mozarella',
     desc: 'Telur gulung isi keju mozarella leleh, garing di luar lembut di dalam.',
     rating: 4.7, reviews: 1543,
     origPrice: 15000, discPercent: 20, popular: false,
-    image: 'gambar/kentang.jpg'
+    image: onlineImage('egg roll mozzarella snack', 114)
   },
   {
     id: 15, cat: 'cemilan', name: 'Cireng Bumbu Rujak',
     desc: 'Cireng kenyal dengan bumbu rujak pedas manis yang bikin ketagihan.',
     rating: 4.6, reviews: 876,
     origPrice: 12000, discPercent: 17, popular: true,
-    image: 'gambar/kentang.jpg'
+    image: onlineImage('fried tapioca snack', 115)
   },
   {
     id: 16, cat: 'cemilan', name: 'Martabak Mini Coklat',
     desc: 'Martabak tipis crispy isi coklat Toblerone dan keju edam, per 5 pcs.',
     rating: 4.9, reviews: 1234,
     origPrice: 25000, discPercent: 40, popular: true,
-    image: 'gambar/kentang.jpg'
+    image: onlineImage('chocolate martabak', 116)
   },
   {
     id: 17, cat: 'cemilan', name: 'Seblak Kuah Pedas',
     desc: 'Seblak khas Bandung dengan kerupuk basah, bakso, dan bumbu pedas level.',
     rating: 4.8, reviews: 654,
     origPrice: 18000, discPercent: 22, popular: false,
-    image: 'gambar/kentang.jpg'
+    image: onlineImage('spicy indonesian soup snack', 117)
   },
   {
     id: 18, cat: 'cemilan', name: 'Kacang Mete Balado',
     desc: 'Kacang mete premium goreng kering dengan bumbu balado pedas meresap.',
     rating: 4.5, reviews: 342,
     origPrice: 22000, discPercent: 15, popular: false,
-    image: 'gambar/kentang.jpg'
+    image: onlineImage('spicy cashew nuts', 118)
   }
 ];
 
@@ -884,7 +889,6 @@ $('checkoutBtn').addEventListener('click', () => {
     showToast('Keranjang masih kosong!');
     return;
   }
-
   closeCart();
   openCheckout();
 });
