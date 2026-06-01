@@ -831,86 +831,58 @@ function closeOrderHistory() {
 function buildAdminOrderMessage(order) {
   const sourceItems = order.itemDetails || order.items || [];
   const itemLines = sourceItems.map((item) => {
-    if (typeof item === 'string') return item;
+    if (typeof item === 'string') return `• ${item}`;
     const itemTotal = item.total || (item.price || 0) * (item.qty || 0);
-    return [
-      item.name,
-      `${formatRp(item.price || 0)} x ${item.qty || 0}`,
-      formatRp(itemTotal)
-    ].join('\n');
-  }).join('\n\n');
+    return `• ${item.name} (${item.qty || 0}x) = ${formatRp(itemTotal)}`;
+  }).join('\n');
   const shippingText = order.shipping === 0 ? 'Gratis' : formatRp(order.shipping || 0);
   const customerNote = order.note?.trim() || '-';
   const total = order.total || 0;
   const subtotal = order.subtotal || total;
   const discount = order.discount || 0;
+  const grossTotal = subtotal + discount;
+  const paymentText = [order.paymentMethod, order.paymentStatus].filter(Boolean).join(' ');
+  const revisionLines = customerNote === '-'
+    ? []
+    : [
+      '',
+      '━━━━━━━━━━━━━━━━━━',
+      '📝 *CATATAN / REVISI PESANAN*',
+      customerNote,
+      '',
+      'Mohon cek catatan pelanggan sebelum pesanan dibuat.'
+    ];
 
   return [
-    '*WarungKu*',
-    'Toko Online Terlengkap',
-    '*NOTA PEMBELIAN*',
+    '🧾 *PESANAN WARUNGKU*',
+    '━━━━━━━━━━━━━━━━━━',
     '',
-    'No. Order',
-    order.orderNo || '-',
-    'Tanggal',
-    order.dateStr || '-',
-    'Waktu',
-    order.timeStr || '-',
-    'Toko',
-    order.storeName || STORE_NAME,
-    'Kasir',
-    order.cashierName || CASHIER_NAME,
-    'Pelanggan',
-    order.name || '-',
-    'WhatsApp',
-    order.phone || '-',
-    'Alamat',
-    order.address || '-',
+    `📄 No. Order : ${order.orderNo || '-'}`,
+    `📅 Tanggal   : ${order.dateStr || '-'}`,
+    `⏰ Waktu     : ${order.timeStr || '-'}`,
     '',
-    '*DETAIL PESANAN*',
+    `👤 Nama      : ${order.name || '-'}`,
+    `📱 WhatsApp  : ${order.phone || '-'}`,
+    `📍 Alamat    : ${order.address || '-'}`,
+    '',
+    '🎁 *DETAIL PESANAN*',
     itemLines || '-',
     '',
-    'Subtotal',
-    formatRp(subtotal + discount),
-    'Diskon',
-    `- ${formatRp(discount)}`,
-    'Ongkir',
-    shippingText,
-    '*TOTAL*',
-    formatRp(total),
+    '━━━━━━━━━━━━━━━━━━',
+    `💰 Subtotal : ${formatRp(grossTotal)}`,
+    `🎉 Diskon   : ${discount > 0 ? formatRp(discount) : '-'}`,
+    `🚚 Ongkir   : ${shippingText}`,
+    `🧾 *TOTAL* : ${formatRp(total)}`,
+    '━━━━━━━━━━━━━━━━━━',
     '',
-    'Metode Bayar',
-    order.paymentMethod || '-',
-    'Status Pesanan',
-    order.orderStatus || '-',
-    'Status',
-    order.paymentStatus || '-',
+    `💳 Pembayaran : ${paymentText || '-'}`,
+    `📌 Status     : ${order.orderStatus || '-'}`,
     '',
-    'Simpan struk ini sampai makanan/minuman diterima.',
-    'Terima kasih telah berbelanja!',
-    'Pesanan akan segera diproses.',
-    `wa.me/${ADMIN_WHATSAPP}`,
+    '🙏 Terima kasih sudah berbelanja di WarungKu.',
+    'Kami tunggu pesanan berikutnya.',
+    ...revisionLines,
     '',
-    '*CATATAN / REVISI PESANAN*',
-    '====================',
-    `No. Order: ${order.orderNo || '-'}`,
-    `Pelanggan: ${order.name || '-'}`,
-    `WhatsApp: ${order.phone || '-'}`,
-    '',
-    '*Permintaan pelanggan*',
-    customerNote,
-    '',
-    '*Arahan untuk admin*',
-    '- Cek catatan pelanggan sebelum pesanan dibuat.',
-    '- Jika ada perubahan menu, topping, level pedas, gula, atau stok kosong, konfirmasi ke pelanggan.',
-    '- Jika tidak ada catatan, proses sesuai nota pembelian di atas.',
-    '',
-    '*Ringkasan pembayaran*',
-    `Metode Bayar: ${order.paymentMethod || '-'}`,
-    `Status Bayar: ${order.paymentStatus || '-'}`,
-    `Total: ${formatRp(total)}`,
-    '',
-    'Mohon pesanan ini segera dicek dan diproses.'
+    '━━━━━━━━━━━━━━━━━━'
   ].join('\n');
 }
 
