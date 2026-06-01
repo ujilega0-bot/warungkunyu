@@ -1079,6 +1079,29 @@ body {
   margin-top: 8px;
 }
 .admin-order-items { color: var(--text-light); }
+.admin-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.admin-status-btn {
+  border: none;
+  border-radius: 8px;
+  background: var(--dark);
+  color: white;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.admin-status-btn:hover { background: var(--primary); }
+.admin-status-btn.danger { background: var(--danger); }
+.admin-status-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
 .firebase-test-output {
   white-space: pre-wrap;
   word-break: break-word;
