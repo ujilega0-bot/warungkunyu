@@ -306,15 +306,26 @@ function buildPosOrder(receiptData) {
 
   return {
     id: receiptData.orderNo.replace(/[^A-Z0-9]/gi, ''),
+    orderNo: receiptData.orderNo,
     customerName: receiptData.name || 'Pelanggan Website',
+    customerPhone: receiptData.phone || '-',
+    address: receiptData.address || '-',
     source: 'Website WarungKu',
     note: noteLines.join(' | ') || '-',
     createdAt: new Date().toISOString(),
     status: 'baru',
+    orderStatus: receiptData.orderStatus,
+    paymentMethod: receiptData.paymentMethod,
+    paymentStatus: receiptData.paymentStatus,
+    subtotal: receiptData.subtotal,
+    discount: receiptData.discount,
+    shipping: receiptData.shipping,
+    total: receiptData.total,
     items: receiptData.items.map((item) => ({
       nama: item.name,
       harga: item.price,
-      qty: item.qty
+      qty: item.qty,
+      total: item.total
     }))
   };
 }
@@ -795,7 +806,7 @@ function renderOrderHistory() {
       <div class="history-status">${escapeHtml(order.orderStatus)}</div>
       <div class="history-items">${escapeHtml((order.items || []).join(', '))}</div>
       <button class="history-wa-btn" data-order-no="${escapeHtml(order.orderNo)}">
-        <i class="fab fa-whatsapp"></i> Hubungi Admin Pesanan
+        <i class="fab fa-whatsapp"></i> Kirim Struk ke Admin
       </button>
     </div>
   `).join('');
@@ -812,7 +823,7 @@ function closeOrderHistory() {
   document.body.style.overflow = '';
 }
 
-function buildOrderSupportMessage(order) {
+function buildAdminOrderMessage(order) {
   const sourceItems = order.itemDetails || order.items || [];
   const itemLines = sourceItems.map((item) => {
     if (typeof item === 'string') return `- ${item}`;
@@ -821,7 +832,7 @@ function buildOrderSupportMessage(order) {
   }).join('\n');
 
   return [
-    '*PERMINTAAN BANTUAN PESANAN WARUNGKU*',
+    '*PESANAN BARU WARUNGKU*',
     '--------------------',
     `No. Order: ${order.orderNo}`,
     `Tanggal: ${order.dateStr || '-'}`,
@@ -836,25 +847,38 @@ function buildOrderSupportMessage(order) {
     '*DETAIL MENU PESANAN*',
     itemLines || '-',
     '',
+    `Subtotal: ${formatRp(order.subtotal || 0)}`,
+    `Diskon: ${formatRp(order.discount || 0)}`,
+    `Ongkir: ${order.shipping === 0 ? 'Gratis' : formatRp(order.shipping || 0)}`,
     `Total: ${formatRp(order.total || 0)}`,
     '',
-    '*PERMINTAAN PELANGGAN*',
-    'Mohon bantuan untuk pesanan ini:',
-    '- ',
+    '*CATATAN PELANGGAN*',
+    order.note || '-',
     '',
-    'Contoh: tambah topping, ubah level pedas, tanpa sambal, atau ada menu yang perlu dikonfirmasi.'
+    'Mohon pesanan ini segera dicek dan diproses.'
   ].join('\n');
 }
 
-function openOrderSupportWhatsApp(order) {
+function getAdminOrderWhatsAppUrl(order) {
+  return `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(buildAdminOrderMessage(order))}`;
+}
+
+function openAdminOrderWhatsApp(order, { auto = false, targetWindow = null } = {}) {
   if (!order) {
     showToast('Pesanan belum ditemukan. Checkout dulu lewat web.');
     return;
   }
 
-  const msg = buildOrderSupportMessage(order);
-  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
-  showToast('Membuka WhatsApp admin pesanan...');
+  const url = getAdminOrderWhatsAppUrl(order);
+  if (targetWindow && !targetWindow.closed) {
+    targetWindow.location.href = url;
+  } else {
+    window.open(url, '_blank');
+  }
+
+  showToast(auto
+    ? 'WhatsApp admin dibuka. Tekan kirim agar admin menerima struk pesanan.'
+    : 'Membuka struk pesanan ke WhatsApp admin...');
 }
 
 async function saveReceiptImage() {
@@ -1004,6 +1028,7 @@ $('confirmPayBtn').addEventListener('click', async () => {
 
   confirmBtn.disabled = true;
   confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+  const adminWhatsAppWindow = window.open('', '_blank');
 
   try {
     stopQrisTimer();
@@ -1015,7 +1040,11 @@ $('confirmPayBtn').addEventListener('click', async () => {
       ? 'Pesanan selesai dan terkirim ke POS online.'
       : 'Pesanan selesai. Isi Firebase agar masuk ke POS online.');
     openReceipt();
+    openAdminOrderWhatsApp(window._receiptData, { auto: true, targetWindow: adminWhatsAppWindow });
   } catch (error) {
+    if (adminWhatsAppWindow && !adminWhatsAppWindow.closed) {
+      adminWhatsAppWindow.close();
+    }
     console.error('Checkout gagal diproses:', error);
     showToast('Checkout belum bisa diproses. Coba ulang beberapa saat lagi.', 3500);
   } finally {
@@ -1027,7 +1056,7 @@ $('confirmPayBtn').addEventListener('click', async () => {
 $('receiptClose').addEventListener('click', closeReceipt);
 $('saveReceiptBtn').addEventListener('click', saveReceiptImage);
 $('receiptWhatsApp').addEventListener('click', () => {
-  openOrderSupportWhatsApp(window._receiptData);
+  openAdminOrderWhatsApp(window._receiptData);
 });
 $('receiptOverlay').addEventListener('click', (e) => {
   if (e.target === $('receiptOverlay')) closeReceipt();
@@ -1043,7 +1072,7 @@ $('historyList').addEventListener('click', (e) => {
   if (!btn) return;
 
   const order = orderHistory.find((item) => item.orderNo === btn.dataset.orderNo);
-  openOrderSupportWhatsApp(order);
+  openAdminOrderWhatsApp(order);
 });
 
 document.querySelectorAll('.cat-btn[data-cat]').forEach((btn) => {
