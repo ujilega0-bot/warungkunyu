@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS Online WarungKu</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="admin-page">
+  <nav class="admin-nav">
+    <div>
+      <div class="admin-brand"><i class="fas fa-cash-register"></i> POS Online WarungKu</div>
+      <p>Pesanan dari web pelanggan akan muncul di sini.</p>
+    </div>
+    <a href="index.html" class="admin-back"><i class="fas fa-store"></i> Web Toko</a>
+  </nav>
+
+  <main class="admin-wrap">
+    <section class="admin-stats">
+      <div class="admin-stat">
+        <span>Total Pesanan</span>
+        <strong id="statTotal">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Pesanan Baru</span>
+        <strong id="statNew">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Total Item</span>
+        <strong id="statItems">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Status Firebase</span>
+        <strong id="statFirebase">-</strong>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-panel-head">
+        <div>
+          <h1>Order Online</h1>
+          <p>Data dibaca dari Firebase Realtime Database setiap beberapa detik.</p>
+        </div>
+        <button class="admin-refresh" id="refreshBtn"><i class="fas fa-rotate"></i> Refresh</button>
+      </div>
+      <div class="admin-alert info show" id="adminAlert">Menunggu data order online...</div>
+      <div class="admin-orders" id="ordersList"></div>
+    </section>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="pos-firebase-bridge.js"></script>
+  <script>
+    'use strict';
+
+    const formatRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    const $ = (id) => document.getElementById(id);
+    let currentOrders = [];
+
+    function escapeHtml(value = '') {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function showAlert(type, message) {
+      const alert = $('adminAlert');
+      alert.className = `admin-alert ${type} show`;
+      alert.textContent = message;
+    }
+
+    function getOrderTotal(order) {
+      if (Number.isFinite(Number(order.total))) return Number(order.total);
+
+      return (order.items || []).reduce((sum, item) => (
+        sum + Number(item.harga || 0) * Number(item.qty || 0)
+      ), 0);
+    }
+
+    function getStatusLabel(status) {
+      const labels = {
+        baru: 'Baru',
+        diproses: 'Diproses',
+        selesai: 'Selesai',
+        batal: 'Batal'
+      };
+
+      return labels[status] || status || '-';
+    }
+
+    function renderOrders(orders) {
+      currentOrders = orders;
+      $('statTotal').textContent = orders.length;
+      $('statNew').textContent = orders.filter((order) => order.status === 'baru').length;
+      $('statItems').textContent = orders.reduce((sum, order) => (
+        sum + (order.items || []).reduce((itemSum, item) => itemSum + Number(item.qty || 0), 0)
+      ), 0);
+      $('statFirebase').textContent = window.WarungKuPOSBridge.isFirebaseConfigured() ? 'Aktif' : 'Belum';
+
+      if (!window.WarungKuPOSBridge.isFirebaseConfigured()) {
+        showAlert('warning', 'Firebase belum dikonfigurasi. POS menampilkan cache lokal saja.');
+      } else if (!orders.length) {
+        showAlert('info', 'Belum ada pesanan online.');
+      } else {
+        showAlert('success', 'Pesanan online berhasil dimuat.');
+      }
+
+      $('ordersList').innerHTML = orders.length ? orders.map((order) => {
+        const items = (order.items || []).map((item) => (
+          `${escapeHtml(item.nama)} (${Number(item.qty || 0)}x) - ${formatRp(item.harga)} = ${formatRp(item.total || Number(item.harga || 0) * Number(item.qty || 0))}`
+        )).join('<br>');
+        const total = getOrderTotal(order);
+        const status = order.status || 'baru';
+
+        return `
+          <article class="admin-order-card">
+            <div class="admin-order-top">
+              <div>
+                <strong>${escapeHtml(order.customerName || 'Pelanggan Website')}</strong>
+                <span>${escapeHtml(order.orderNo || order.id || '-')} - ${escapeHtml(order.source || '-')}</span>
+              </div>
+              <b>${formatRp(total)}</b>
+            </div>
+            <div class="admin-order-grid">
+              <div><span>Status</span><strong>${escapeHtml(getStatusLabel(status))}</strong></div>
+              <div><span>Waktu</span><strong>${escapeHtml(new Date(order.createdAt || Date.now()).toLocaleString('id-ID'))}</strong></div>
+              <div><span>WhatsApp</span><strong>${escapeHtml(order.customerPhone || '-')}</strong></div>
+              <div><span>Bayar</span><strong>${escapeHtml(order.paymentMethod || '-')} (${escapeHtml(order.paymentStatus || '-')})</strong></div>
+            </div>
+            <div class="admin-order-address"><strong>Alamat:</strong> ${escapeHtml(order.address || '-')}</div>
+            <div class="admin-order-address"><strong>Catatan:</strong> ${escapeHtml(order.note || '-')}</div>
+            <div class="admin-order-items">${items || '-'}</div>
+            <div class="admin-order-actions">
+              <button class="admin-status-btn" data-order-id="${escapeHtml(order.id)}" data-status="baru">Baru</button>
+              <button class="admin-status-btn" data-order-id="${escapeHtml(order.id)}" data-status="diproses">Proses</button>
+              <button class="admin-status-btn" data-order-id="${escapeHtml(order.id)}" data-status="selesai">Selesai</button>
+              <button class="admin-status-btn danger" data-order-id="${escapeHtml(order.id)}" data-status="batal">Batal</button>
+            </div>
+          </article>`;
+      }).join('') : `
+        <div class="admin-empty">
+          <i class="fas fa-receipt"></i>
+          <strong>Belum ada pesanan</strong>
+          <span>Coba checkout dari web toko setelah Firebase diisi.</span>
+        </div>`;
+    }
+
+    window.addEventListener('warungku:online-orders', (event) => {
+      renderOrders(event.detail.orders || []);
+    });
+
+    window.addEventListener('warungku:online-orders-error', (event) => {
+      showAlert('warning', `Firebase belum bisa dibaca: ${event.detail.error.message}. Cek Rules Realtime Database.`);
+      renderOrders(window.WarungKuPOSBridge.getLocalOrders());
+    });
+
+    $('refreshBtn').addEventListener('click', async () => {
+      try {
+        const orders = await window.WarungKuPOSBridge.loadOnlineOrders();
+        renderOrders(orders);
+      } catch (error) {
+        showAlert('warning', `Refresh gagal: ${error.message}.`);
+      }
+    });
+
+    $('ordersList').addEventListener('click', async (event) => {
+      const button = event.target.closest('.admin-status-btn');
+      if (!button) return;
+
+      button.disabled = true;
+      try {
+        await window.WarungKuPOSBridge.updateOrderStatus(button.dataset.orderId, button.dataset.status);
+        showAlert('success', `Status pesanan diubah menjadi ${getStatusLabel(button.dataset.status)}.`);
+        const orders = await window.WarungKuPOSBridge.loadOnlineOrders();
+        renderOrders(orders);
+      } catch (error) {
+        showAlert('warning', `Status belum tersimpan online: ${error.message}.`);
+        renderOrders(currentOrders);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    renderOrders(window.WarungKuPOSBridge.getLocalOrders());
+  </script>
+</body>
+</html>
