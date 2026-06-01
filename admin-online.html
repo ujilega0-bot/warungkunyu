@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS Online WarungKu</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="admin-page">
+  <nav class="admin-nav">
+    <div>
+      <div class="admin-brand"><i class="fas fa-cash-register"></i> POS Online WarungKu</div>
+      <p>Pesanan dari web pelanggan akan muncul di sini.</p>
+    </div>
+    <a href="index.html" class="admin-back"><i class="fas fa-store"></i> Web Toko</a>
+  </nav>
+
+  <main class="admin-wrap">
+    <section class="admin-stats">
+      <div class="admin-stat">
+        <span>Total Pesanan</span>
+        <strong id="statTotal">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Pesanan Baru</span>
+        <strong id="statNew">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Total Item</span>
+        <strong id="statItems">0</strong>
+      </div>
+      <div class="admin-stat">
+        <span>Status Firebase</span>
+        <strong id="statFirebase">-</strong>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-panel-head">
+        <div>
+          <h1>Order Online</h1>
+          <p>Data dibaca dari Firebase Realtime Database setiap beberapa detik.</p>
+        </div>
+        <button class="admin-refresh" id="refreshBtn"><i class="fas fa-rotate"></i> Refresh</button>
+      </div>
+      <div class="admin-alert info show" id="adminAlert">Menunggu data order online...</div>
+      <div class="admin-orders" id="ordersList"></div>
+    </section>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="pos-firebase-bridge.js"></script>
+  <script>
+    'use strict';
+
+    const formatRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value = '') {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function renderOrders(orders) {
+      $('statTotal').textContent = orders.length;
+      $('statNew').textContent = orders.filter((order) => order.status === 'baru').length;
+      $('statItems').textContent = orders.reduce((sum, order) => (
+        sum + (order.items || []).reduce((itemSum, item) => itemSum + Number(item.qty || 0), 0)
+      ), 0);
+      $('statFirebase').textContent = window.WarungKuPOSBridge.isFirebaseConfigured() ? 'Aktif' : 'Belum';
+
+      const alert = $('adminAlert');
+      if (!window.WarungKuPOSBridge.isFirebaseConfigured()) {
+        alert.className = 'admin-alert warning show';
+        alert.textContent = 'Isi firebase-config.js dulu agar halaman ini tersambung online.';
+      } else if (!orders.length) {
+        alert.className = 'admin-alert info show';
+        alert.textContent = 'Belum ada pesanan online.';
+      } else {
+        alert.className = 'admin-alert success show';
+        alert.textContent = 'Pesanan online berhasil dimuat.';
+      }
+
+      $('ordersList').innerHTML = orders.length ? orders.map((order) => {
+        const items = (order.items || []).map((item) => (
+          `${escapeHtml(item.nama)} (${Number(item.qty || 0)}x) - ${formatRp(item.harga)}`
+        )).join('<br>');
+        const total = (order.items || []).reduce((sum, item) => (
+          sum + Number(item.harga || 0) * Number(item.qty || 0)
+        ), 0);
+
+        return `
+          <article class="admin-order-card">
+            <div class="admin-order-top">
+              <div>
+                <strong>${escapeHtml(order.customerName || 'Pelanggan Website')}</strong>
+                <span>${escapeHtml(order.id || '-')} - ${escapeHtml(order.source || '-')}</span>
+              </div>
+              <b>${formatRp(total)}</b>
+            </div>
+            <div class="admin-order-grid">
+              <div><span>Status</span><strong>${escapeHtml(order.status || '-')}</strong></div>
+              <div><span>Waktu</span><strong>${escapeHtml(new Date(order.createdAt || Date.now()).toLocaleString('id-ID'))}</strong></div>
+              <div><span>Jumlah Menu</span><strong>${(order.items || []).length}</strong></div>
+              <div><span>Total Item</span><strong>${(order.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0)}</strong></div>
+            </div>
+            <div class="admin-order-address">${escapeHtml(order.note || '-')}</div>
+            <div class="admin-order-items">${items || '-'}</div>
+          </article>`;
+      }).join('') : `
+        <div class="admin-empty">
+          <i class="fas fa-receipt"></i>
+          <strong>Belum ada pesanan</strong>
+          <span>Coba checkout dari web toko setelah Firebase diisi.</span>
+        </div>`;
+    }
+
+    window.addEventListener('warungku:online-orders', (event) => {
+      renderOrders(event.detail.orders || []);
+    });
+
+    $('refreshBtn').addEventListener('click', async () => {
+      const orders = await window.WarungKuPOSBridge.loadOnlineOrders();
+      renderOrders(orders);
+    });
+
+    renderOrders([]);
+  </script>
+</body>
+</html>
