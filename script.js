@@ -151,7 +151,7 @@ const CASHIER_NAME = 'Admin WarungKu';
 const ORDER_STATUS = 'Diproses';
 const SHIPPING_COST = 0;
 
-const formatRp = (n) => 'Rp ' + n.toLocaleString('id-ID');
+const formatRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 const discPrice = (p) => Math.round(p.origPrice * (1 - p.discPercent / 100));
 const $ = (id) => document.getElementById(id);
 const formatShipping = () => (SHIPPING_COST === 0 ? 'Gratis' : formatRp(SHIPPING_COST));
@@ -217,6 +217,29 @@ function updateOrderCount() {
   localStorage.setItem('wk_order_count', orderCount);
 }
 
+function buildOrderIdentity(now) {
+  const pad = (n, size = 2) => String(n).padStart(size, '0');
+  const datePart = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate())
+  ].join('');
+  const timePart = [
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds())
+  ].join('');
+  const sequence = pad(orderCount, 4);
+  const randomPart = Math.random().toString(36).slice(2, 5).toUpperCase();
+  const orderId = `WK${datePart}${timePart}${sequence}${randomPart}`;
+
+  return {
+    orderId,
+    orderNo: `#${orderId}`,
+    barcode: orderId
+  };
+}
+
 function saveCart() {
   localStorage.setItem('wk_cart', JSON.stringify(cart));
 }
@@ -227,6 +250,7 @@ function getOrderHistory() {
 
 function saveOrderHistory(receiptData) {
   orderHistory.unshift({
+    orderId: receiptData.orderId,
     orderNo: receiptData.orderNo,
     dateStr: receiptData.dateStr,
     timeStr: receiptData.timeStr,
@@ -310,7 +334,7 @@ function buildPosOrder(receiptData) {
   ].filter(Boolean);
 
   return {
-    id: receiptData.orderNo.replace(/[^A-Z0-9]/gi, ''),
+    id: receiptData.orderId || receiptData.orderNo.replace(/[^A-Z0-9]/gi, ''),
     orderNo: receiptData.orderNo,
     customerName: receiptData.name || 'Pelanggan Website',
     customerPhone: receiptData.phone || '-',
@@ -682,8 +706,7 @@ async function buildReceipt() {
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
   const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} WIB`;
-  const orderNo = '#WK-' + String(orderCount).padStart(4, '0');
-  const barcode = 'WK' + now.getFullYear() + String(orderCount).padStart(4, '0');
+  const { orderId, orderNo, barcode } = buildOrderIdentity(now);
 
   const name = $('custName').value.trim();
   const phone = $('custPhone').value.trim();
@@ -740,6 +763,7 @@ async function buildReceipt() {
   }
 
   window._receiptData = {
+    orderId,
     name,
     phone: normalizePhoneNumber(phone),
     address,
@@ -1055,7 +1079,6 @@ $('confirmPayBtn').addEventListener('click', async () => {
 
   confirmBtn.disabled = true;
   confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-  const adminWhatsAppWindow = window.open('', '_blank');
 
   try {
     stopQrisTimer();
@@ -1067,11 +1090,7 @@ $('confirmPayBtn').addEventListener('click', async () => {
       ? 'Pesanan selesai dan terkirim ke POS online.'
       : 'Pesanan selesai. Isi Firebase agar masuk ke POS online.');
     openReceipt();
-    openAdminOrderWhatsApp(window._receiptData, { auto: true, targetWindow: adminWhatsAppWindow });
   } catch (error) {
-    if (adminWhatsAppWindow && !adminWhatsAppWindow.closed) {
-      adminWhatsAppWindow.close();
-    }
     console.error('Checkout gagal diproses:', error);
     showToast('Checkout belum bisa diproses. Coba ulang beberapa saat lagi.', 3500);
   } finally {
